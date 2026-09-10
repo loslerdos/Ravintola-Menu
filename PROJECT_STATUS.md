@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-10
+Paivitetty: 2026-09-11
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - Unity-versio: `6000.5.7f1`
 - Render pipeline: Universal Render Pipeline (URP)
 - Input System: Unityn uusi Input System
-- Aloitusscene: `Assets/Scenes/SampleScene.unity`
+- Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
 
 ## Tehty
@@ -23,10 +23,21 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - Projektin jakaminen koti- ja koulukoneen välillä on valmisteltu.
 - Tehtävänannon kuvat on tutkittu.
 - Ensimmäisen vaiheen vaatimukset on kirjattu alle.
+- Canvas UI on valittu käyttöliittymätekniikaksi.
+- Canvas Scaler käyttää `Scale With Screen Size` -asetusta, viiteresoluutiolla `1920 x 1080`.
+- `MenuItem`-dataluokassa on id, nimi, kuvaus, hinta, kategoria ja vapaaehtoinen lisähuomautus.
+- `MenuManager` sisältää kategoriaryhmät: Alkuruoat, Pääruoat, Jälkiruoat ja Juomat.
+- Kuhunkin kategoriaan on lisätty kaksi tuotetta Inspectorissa.
+- `MenuItemCard` näyttää tuotteen kategorian, nimen, kuvauksen, lisähuomautuksen ja hinnan.
+- `MenuItemCard` on tallennettu Prefabiksi: `Assets/Prefabs/MenuItemCard.prefab`.
+- Scroll View ja Vertical Layout Group on luotu tuotekorttilistaa varten.
+- Header sisältää logon, ravintolan nimen, alaotsikon ja oikean reunan viestin.
+- CategoryNavigation-paneeli on sijoitettu Headerin alle ja sille on tehty kolmen 1 px viivan erotinreuna.
+- CategoryButtons-sailio ja viisi kategoriapainiketta on luotu.
 
 ## Tehtävänannon vaatimukset
 
-- Valitse UI-tavaksi Canvas UI tai UI Toolkit. Canvas UI on alustava valinta.
+- Canvas UI on valittu.
 - Suunnittele menu, jossa on kategoriat ja tuotteet.
 - Tee yhdestä tuotteesta uudelleenkäytettävä UI-elementti, esimerkiksi prefab.
 - Erottele tuotteen data ja sen esitystapa käyttöliittymässä.
@@ -37,15 +48,16 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Seuraavaksi
 
-1. Valitse ja perustele Canvas UI:n käyttö.
-2. Määrittele ensimmäiset kategoriat ja tuotteet.
-3. Luo tuotteen data- ja UI-rakenne.
-4. Rakenna ensimmäinen toimiva näkymä `SampleScene`-sceneen.
-5. Testaa projekti Unityssa ja tallenna muutokset GitHubiin.
+1. Viimeistele kategoriapainikkeiden yhtenäinen ulkoasu ja värit.
+2. Tee `MenuManager`-logiikka, joka luo tuotekortit Prefabista kategorioiden tuotteille.
+3. Kytke kategoriapainikkeet näyttämään valitun kategorian tuotteet.
+4. Varmista, että tuotelista on selattava ja luettava eri ruutukoissa.
+5. Lisää vasta toimivan perusmenun jälkeen hover- ja muut bonusanimaatiot.
 
 ## Keskeneräiset asiat ja ongelmat
 
-- Ei vielä kirjattuja ongelmia.
+- Category-painikkeiden hover-efektit ja kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
+- Lisaystilauspainikkeessa ei ole viela toiminnallisuutta; tilaustoiminto toteutetaan tehtavan myohemmassa vaiheessa.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -57,5 +69,5 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Projektin jatkamista varten luotu tämä tilatiedosto ja kirjattu tehtävänannon ensimmäiset vaatimukset.
-- Seuraava aloitus: Suunnitellaan ravintolamenun ensimmäinen näkymä ja tuotetietojen rakenne.
+- Tehty: Rakennettu Canvas UI:n perusrakenne, kategoriadata, tuotekortti-Prefab, vieritettävä sisältö, Header ja kategorianavigoinnin alku.
+- Seuraava aloitus: Viimeistellään kategoriapainikkeiden ulkoasu ja toteutetaan tuotekorttien automaattinen luonti `MenuManager`-datan perusteella.
