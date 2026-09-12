@@ -10,8 +10,9 @@ public class MenuItemDisplay : MonoBehaviour
     public TMP_Text kuvaus;
     public TMP_Text lisahuomautus;
 
-    private void Start()
+    public void Display(MenuItem menuItem)
     {
+        tuote = menuItem;
         nimi.text = tuote.productName;
         hinta.text = tuote.price.ToString("0.00") + " €";
         kategoria.text = tuote.category.ToUpper();
