@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-11
+Paivitetty: 2026-09-13
 
 ## Projektin tavoite
 
@@ -33,7 +33,15 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - Scroll View ja Vertical Layout Group on luotu tuotekorttilistaa varten.
 - Header sisältää logon, ravintolan nimen, alaotsikon ja oikean reunan viestin.
 - CategoryNavigation-paneeli on sijoitettu Headerin alle ja sille on tehty kolmen 1 px viivan erotinreuna.
-- CategoryButtons-sailio ja viisi kategoriapainiketta on luotu.
+- CategoryNavigation on upotettu visuaalisesti Headerin alle haivytetyn varjon avulla.
+- CategoryButtons-sailio ja viisi kategoriapainiketta on luotu Prefabista.
+- Kategoriapainikkeilla on oma vihrea kehysgrafiikka, musta erotusura, hover-savy, painallussavy ja painumisefekti.
+- Kategoriapainikkeet suodattavat tuotteet: Menu, Alkuruoat, Pääruoat, Jälkiruoat ja Juomat.
+- Valittu kategoria jaa aktiiviseen savyyn ja vieritys palautuu kategorian vaihdossa listan alkuun.
+- MenuScrollView vierittaa vain pystysuunnassa, kayttaa Clamped-liiketta ja inertiaa.
+- Tuotekorttien valia ja varjostusta on viimeistelty vihrea-musta-oranssiin ilmeeseen.
+- Lisaa tilaukseen -painike on rakennettu uudelleen omilla ShadowLayer- ja Face-kerroksilla; se vaalenee hoverissa ja painuu alas klikattaessa.
+- Footer on lisatty Canvasin alareunaan omalla varjollaan.
 
 ## Tehtävänannon vaatimukset
 
@@ -48,16 +56,16 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Seuraavaksi
 
-1. Viimeistele kategoriapainikkeiden yhtenäinen ulkoasu ja värit.
-2. Tee `MenuManager`-logiikka, joka luo tuotekortit Prefabista kategorioiden tuotteille.
-3. Kytke kategoriapainikkeet näyttämään valitun kategorian tuotteet.
-4. Varmista, että tuotelista on selattava ja luettava eri ruutukoissa.
-5. Lisää vasta toimivan perusmenun jälkeen hover- ja muut bonusanimaatiot.
+1. Avaa projekti koulukoneella, hae viimeisimmat muutokset GitHubista ja varmista Play-tilassa perusmenun toiminta.
+2. Arvioi koko näkymän mittasuhteet ja tee vain tarvittavat pienet visuaaliset viimeistelyt.
+3. Odota opettajan seuraavan vaiheen tehtavanantoa ennen tilauslogiikan toteuttamista.
+4. Seuraavassa vaiheessa suunnitellaan MenuScrollView vasemmalle ja ostoskoripaneeli oikealle.
 
 ## Keskeneräiset asiat ja ongelmat
 
-- Category-painikkeiden hover-efektit ja kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
-- Lisaystilauspainikkeessa ei ole viela toiminnallisuutta; tilaustoiminto toteutetaan tehtavan myohemmassa vaiheessa.
+- Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
+- Lisaa tilaukseen -painikkeessa ei ole viela toiminnallisuutta; tilaustoiminto toteutetaan tehtavan myohemmassa vaiheessa.
+- Ostoskori tulee myohemmin MenuScrollViewn oikealle puolelle. Nykyinen keskitetty Scroll View on valiaikainen asettelu.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -69,5 +77,5 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Rakennettu Canvas UI:n perusrakenne, kategoriadata, tuotekortti-Prefab, vieritettävä sisältö, Header ja kategorianavigoinnin alku.
-- Seuraava aloitus: Viimeistellään kategoriapainikkeiden ulkoasu ja toteutetaan tuotekorttien automaattinen luonti `MenuManager`-datan perusteella.
+- Tehty: Valmistettu toimiva 3.1-perusmenu Canvas UI:lla, mukaan lukien kategoriadata, automaattisesti luodut tuotekortit, vieritys, kategoriavalinta, visuaalinen syvyys ja Footer.
+- Seuraava aloitus: Tarkista projekti koulukoneella, varmista Play-tilassa toiminta ja odota opettajan seuraavaa tehtavavaihetta ennen tilaustoiminnon rakentamista.
