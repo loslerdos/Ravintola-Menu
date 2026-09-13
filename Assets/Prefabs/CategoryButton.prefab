@@ -293,6 +293,7 @@ MonoBehaviour:
   normalColor: {r: 1, g: 1, b: 1, a: 1}
   hoverColor: {r: 0.7249021, g: 0.8490566, b: 0.7249021, a: 1}
   pressedColor: {r: 0.369571, g: 0.5188679, b: 0.36957103, a: 1}
+  selectedColor: {r: 0.69411767, g: 0.81568635, b: 0.69411767, a: 1}
   colorSpeed: 18
   pressedOffset: 3
   pressSpeed: 45

@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MenuManager : MonoBehaviour
 {
     [SerializeField] private MenuItemDisplay menuItemCardPrefab;
     [SerializeField] private Transform menuContent;
+    [SerializeField] private ScrollRect menuScrollView;
 
     public List<MenuCategory> categories = new List<MenuCategory>
     {
@@ -27,6 +29,8 @@ public class MenuManager : MonoBehaviour
         {
             CreateCards(category.menuItems);
         }
+
+        ScrollToTop();
     }
 
     public void ShowCategory(string categoryName)
@@ -37,6 +41,7 @@ public class MenuManager : MonoBehaviour
         if (category != null)
         {
             CreateCards(category.menuItems);
+            ScrollToTop();
         }
     }
 
@@ -55,5 +60,11 @@ public class MenuManager : MonoBehaviour
         {
             Destroy(child.gameObject);
         }
+    }
+
+    private void ScrollToTop()
+    {
+        Canvas.ForceUpdateCanvases();
+        menuScrollView.verticalNormalizedPosition = 1f;
     }
 }

@@ -10,6 +10,7 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color hoverColor = new Color(0.86f, 0.92f, 0.86f, 1f);
     [SerializeField] private Color pressedColor = new Color(0.42f, 0.5f, 0.42f, 1f);
+    [SerializeField] private Color selectedColor = new Color(0.72f, 0.54f, 0.38f, 1f);
     [SerializeField] private float colorSpeed = 18f;
     [SerializeField] private float pressedOffset = 3f;
     [SerializeField] private float pressSpeed = 45f;
@@ -21,6 +22,9 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
     private Vector2 targetFacePosition;
     private float targetLabelRotation;
     private bool pointerIsOver;
+    private bool isSelected;
+
+    private static CategoryButtonMotion selectedButton;
 
     private void Awake()
     {
@@ -53,13 +57,13 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
     public void OnPointerEnter(PointerEventData eventData)
     {
         pointerIsOver = true;
-        targetColor = hoverColor;
+        targetColor = isSelected ? selectedColor : hoverColor;
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
         pointerIsOver = false;
-        targetColor = normalColor;
+        targetColor = isSelected ? selectedColor : normalColor;
         targetLabelRotation = 0f;
     }
 
@@ -72,9 +76,26 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        targetColor = pointerIsOver ? hoverColor : normalColor;
+        targetColor = isSelected
+            ? selectedColor
+            : pointerIsOver ? hoverColor : normalColor;
         targetFacePosition = defaultFacePosition;
         targetLabelRotation = 0f;
+    }
+
+    public void Select()
+    {
+        if (selectedButton != null && selectedButton != this)
+        {
+            selectedButton.isSelected = false;
+            selectedButton.targetColor = selectedButton.pointerIsOver
+                ? selectedButton.hoverColor
+                : selectedButton.normalColor;
+        }
+
+        selectedButton = this;
+        isSelected = true;
+        targetColor = selectedColor;
     }
 
     private void SetButtonColor(Color color)
