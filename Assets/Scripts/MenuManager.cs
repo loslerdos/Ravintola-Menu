@@ -1,5 +1,5 @@
-using TMPro;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,7 +8,6 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private MenuItemDisplay menuItemCardPrefab;
     [SerializeField] private Transform menuContent;
     [SerializeField] private ScrollRect menuScrollView;
-
     [SerializeField] private CartUI cartUI;
     [SerializeField] private TMP_Text cartStatusText;
     [SerializeField] private TMP_Text cartTotalText;
@@ -66,11 +65,8 @@ public class MenuManager : MonoBehaviour
     public void AddToCart(MenuItem menuItem)
     {
         cartItems.Add(menuItem);
-
         cartUI.UpdateCartUI(cartItems);
         UpdateFooterUI();
-
-        Debug.Log($"Lisätty ostoskoriin: {menuItem.productName}. Ostoskorissa tuotteita: {cartItems.Count}");
     }
 
     private void UpdateFooterUI()

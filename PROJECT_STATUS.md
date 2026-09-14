@@ -51,12 +51,17 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - RightPanel sisältää InfoContent-objektin suljetun ostoskorin tilaa varten.
 - Footeriin on lisätty CartStatusText, CartTotalText ja OpenCartButton.
 - CartContentPanel on luotu RightPanelin sisään avattavaa ostoskorilistaa varten.
-- CartContentPanel sisältää CartTitle-, CloseCartButton-, CartScrollView- ja CartTotalText-objektit.
-- CartScrollViewn Content käyttää Vertical Layout Group- ja Content Size Fitter -komponentteja.
+- CartContentPanelin CartScrollView tayttaa RightPanelin, ja Viewport maskaa vierivan kuitin paneelin reunojen sisaan.
+- CartScrollViewn Contentissa ovat kuitin otsikko, CartRowsContainer, loppusumma ja tulevat kuitin toimintopainikkeet. Koko kuitti vierii yhtena kokonaisuutena.
+- CartRowsContainerin sisaan luodaan dynaamiset CartItemRow-rivit. CartUI poistaa paivityksessa vain CartItemRow-rivit, joten otsikko ja loppusumma sailyvat.
+- CartScrollViewn Content ja CartRowsContainer kayttavat Vertical Layout Group- ja Content Size Fitter -komponentteja.
 - CartItemRow-prefab ja CartItemRow-skripti näyttävät ostoskorituotteen nimen sekä hinnan.
+- CartItemRow-prefabin taustakuva on tehty lapinakyvaksi, joten kuitissa nakyvat vain tuotteen nimi ja hinta.
 - CartUI-skripti luo ostoskoririvit cartItems-listasta ja laskee loppusumman.
 - MenuManager päivittää CartUI-näkymän sekä Footerin tuotemäärän ja loppusumman aina, kun tuote lisätään ostoskoriin.
 - CartContentPanel pidetään aktiivisena, mutta piilotetaan Canvas Group -komponentilla: Alpha 0, Interactable pois ja Blocks Raycasts pois.
+- InfoContentilla on oma Canvas Group. Footerin OpenCartButton kutsuu CartUI.ToggleCart()-metodia ja vaihtaa tekstin muotojen "Näytä tilaus" ja "Sulje tilaus" välillä.
+- CartContentPanelin avaamisessa ja sulkemisessa on CanvasGroup-häivytys, skaalaus, siirtymä Footer-painikkeen kohdalta sekä 3D-tyylinen X/Y/Z-käännös.
 - Unity 6.6:ssa Scrollbarin käytöstä poistaminen aiheutti IndexOutOfRangeException-virheen. Virhe vältetään Scrollbar Visibility -asetuksella Permanent ja piilottamalla ostoskoripaneeli Canvas Groupilla eikä Set Active -asetuksella.
 
 ## Tehtävänannon vaatimukset
@@ -72,19 +77,16 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Seuraavaksi
 
-1. Testaa Play-tilassa MenuManagerin Inspector-viittaukset: Cart UI, Cart Status Text ja Cart Total Text.
-2. Lisää tuotteita ja varmista, että Footerin tuotemäärä ja loppusumma päivittyvät oikein.
-3. Aseta CartContentPanelin Canvas Groupin Alpha väliaikaisesti arvoon 1 ja varmista, että oikealle luodaan yksi CartItemRow jokaista cartItems-listan tuotetta kohti.
-4. Palauta Canvas Groupin Alpha arvoon 0.
-5. Toteuta OpenCartButton- ja CloseCartButton-painikkeiden avaus- ja sulkemislogiikka.
-6. Lisää CartContentPanelille nopea pyörähdys-, skaalaus- ja häivytysanimaatio.
+1. Odota seuraavaa tehtävänantoa ennen uusien ostoskoritoimintojen toteuttamista.
+2. Toteuta myöhemmin yksi uudelleenkaytettava vahvistusikkuna Canvasin alle: ostoskoririvin klikkaus vahvistaa yksittaisen tuotteen poiston ja kuitin loppusumman klikkaus vahvistaa koko korin tyhjennyksen.
+3. Lisaa myohemmin kuitin loppusumman alle vierivat "Vahvista tilaus"- ja "Peru tilaus" -painikkeet. Peru tilaus tarvitsee vahvistusikkunan ennen korin tyhjennysta.
+4. Lisää kategoriapainikkeille kuvakkeet, jos ne kuuluvat tulevaan tehtävänantoon.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
-- Ostoskorin UI-rakennetta ei ole vielä testattu Play-tilassa.
-- Ostoskorin avaus-, sulkemis- ja pyörähtävä animaatio puuttuvat vielä.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
+- Yksittaisen tuotteen poisto, koko ostoskorin tyhjennys, tilauksen vahvistus ja tilauksen peruutus on suunniteltu, mutta niita ei ole viela toteutettu.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -96,5 +98,5 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Paivitetty projekti Unity-versioon `6000.6.0f1`, toteutettu vaihe 3.2 ja rakennettu vaiheen 3.3 ostoskorin UI-rakenne, riviprefab, CartUI-skripti, Footer-yhteenveto sekä MenuManagerin UI-päivitykset.
-- Seuraava aloitus: Testaa ensin ostoskoririvien, Footerin tuotemäärän ja loppusumman toiminta Play-tilassa. Toteuta vasta testin jälkeen ostoskorin avaus-, sulkemis- ja pyörähtävä animaatio.
+- Tehty: Vaihe 3.3 on viimeistelty. Kuitin otsikko, ostoskoririvit ja loppusumma vierivat yhtena kokonaisuutena RightPanelissa. Footerin yksi painike avaa ja sulkee kuitin, ja avauksessa/sulkemisessa on 3D-tyylinen animaatio.
+- Seuraava aloitus: Odota seuraavaa tehtävänantoa. Tuleva ostoskorin hallintavaihe alkaa vahvistusikkunan suunnittelusta ja toteutuksesta, ei yksittaisista poisto- tai tyhjennyspainikkeista.
