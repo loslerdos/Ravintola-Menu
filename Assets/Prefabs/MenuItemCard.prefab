@@ -1374,6 +1374,7 @@ MonoBehaviour:
   kategoria: {fileID: 5433331216182142995}
   kuvaus: {fileID: 5326962830186238649}
   lisahuomautus: {fileID: 3791056650406941816}
+  addToCartButton: {fileID: 4323035431922035558}
 --- !u!1 &9052939465712714851
 GameObject:
   m_ObjectHideFlags: 0

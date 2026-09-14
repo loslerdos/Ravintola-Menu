@@ -8,6 +8,8 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Transform menuContent;
     [SerializeField] private ScrollRect menuScrollView;
 
+    public List<MenuItem> cartItems = new List<MenuItem>();
+
     public List<MenuCategory> categories = new List<MenuCategory>
     {
         new MenuCategory { categoryName = "Alkuruoat" },
@@ -50,8 +52,14 @@ public class MenuManager : MonoBehaviour
         foreach (MenuItem menuItem in menuItems)
         {
             MenuItemDisplay card = Instantiate(menuItemCardPrefab, menuContent);
-            card.Display(menuItem);
+            card.Display(menuItem, AddToCart);
         }
+    }
+
+    public void AddToCart(MenuItem menuItem)
+    {
+        cartItems.Add(menuItem);
+        Debug.Log($"Lisätty ostoskoriin: {menuItem.productName}. Ostoskorissa tuotteita: {cartItems.Count}");
     }
 
     private void ClearCards()

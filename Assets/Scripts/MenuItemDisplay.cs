@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
 
 public class MenuItemDisplay : MonoBehaviour
 {
@@ -9,8 +11,9 @@ public class MenuItemDisplay : MonoBehaviour
     public TMP_Text kategoria;
     public TMP_Text kuvaus;
     public TMP_Text lisahuomautus;
+    [SerializeField] private Button addToCartButton;
 
-    public void Display(MenuItem menuItem)
+    public void Display(MenuItem menuItem, Action<MenuItem> onAddToCart)
     {
         tuote = menuItem;
         nimi.text = tuote.productName;
@@ -25,5 +28,8 @@ public class MenuItemDisplay : MonoBehaviour
         {
             lisahuomautus.text = tuote.specialNote;
         }
+
+        addToCartButton.onClick.RemoveAllListeners();
+        addToCartButton.onClick.AddListener(() => onAddToCart(tuote));
     }
 }

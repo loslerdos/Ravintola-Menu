@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-13
+Paivitetty: 2026-09-14
 
 ## Projektin tavoite
 
@@ -10,7 +10,7 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Nykyinen tila
 
-- Unity-versio: `6000.5.7f1`
+- Unity-versio: `6000.6.0f1`
 - Render pipeline: Universal Render Pipeline (URP)
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
@@ -41,6 +41,9 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - MenuScrollView vierittaa vain pystysuunnassa, kayttaa Clamped-liiketta ja inertiaa.
 - Tuotekorttien valia ja varjostusta on viimeistelty vihrea-musta-oranssiin ilmeeseen.
 - Lisaa tilaukseen -painike on rakennettu uudelleen omilla ShadowLayer- ja Face-kerroksilla; se vaalenee hoverissa ja painuu alas klikattaessa.
+- `MenuManager` sisältää `cartItems`-listan valittuja tuotteita varten.
+- Jokaisen dynaamisesti luodun `MenuItemCard`-kortin Lisaa tilaukseen -painike välittää oikean `MenuItem`-olion `MenuManager.AddToCart`-metodille.
+- Tuotteen nimi ja ostoskorin tuotemäärä tulostuvat Consoleen jokaisen lisäyksen jälkeen.
 - Footer on lisatty Canvasin alareunaan omalla varjollaan.
 
 ## Tehtävänannon vaatimukset
@@ -56,15 +59,14 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Seuraavaksi
 
-1. Avaa projekti koulukoneella, hae viimeisimmat muutokset GitHubista ja varmista Play-tilassa perusmenun toiminta.
-2. Arvioi koko näkymän mittasuhteet ja tee vain tarvittavat pienet visuaaliset viimeistelyt.
-3. Odota opettajan seuraavan vaiheen tehtavanantoa ennen tilauslogiikan toteuttamista.
-4. Seuraavassa vaiheessa suunnitellaan MenuScrollView vasemmalle ja ostoskoripaneeli oikealle.
+1. Testaa Play-tilassa, että jokaisen tuotteen Lisaa tilaukseen -painike lisää oikean tuotteen ostoskoriin ja Consoleen tulostuu nimi sekä määrä.
+2. Varmista, että sama tuote voidaan lisätä useita kertoja.
+3. Seuraavassa vaiheessa suunnitellaan MenuScrollView vasemmalle ja ostoskoripaneeli oikealle.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
-- Lisaa tilaukseen -painikkeessa ei ole viela toiminnallisuutta; tilaustoiminto toteutetaan tehtavan myohemmassa vaiheessa.
+- Ostoskori on toistaiseksi vain `cartItems`-datalista ja Console-tuloste; sen käyttöliittymää ei ole vielä toteutettu.
 - Ostoskori tulee myohemmin MenuScrollViewn oikealle puolelle. Nykyinen keskitetty Scroll View on valiaikainen asettelu.
 
 ## Työskentelyohje seuraavalle kerralle
@@ -77,5 +79,5 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Valmistettu toimiva 3.1-perusmenu Canvas UI:lla, mukaan lukien kategoriadata, automaattisesti luodut tuotekortit, vieritys, kategoriavalinta, visuaalinen syvyys ja Footer.
-- Seuraava aloitus: Tarkista projekti koulukoneella, varmista Play-tilassa toiminta ja odota opettajan seuraavaa tehtavavaihetta ennen tilaustoiminnon rakentamista.
+- Tehty: Paivitetty projekti Unity-versioon `6000.6.0f1` ja toteutettu vaihe 3.2: Lisaa tilaukseen -painike lisää oikean `MenuItem`-olion `cartItems`-listaan.
+- Seuraava aloitus: Testaa ostoskoridatan toiminta Play-tilassa ja varmista Console-tulosteista, että tuote ja ostoskorin määrä ovat oikein.
