@@ -45,6 +45,19 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - Jokaisen dynaamisesti luodun `MenuItemCard`-kortin Lisaa tilaukseen -painike välittää oikean `MenuItem`-olion `MenuManager.AddToCart`-metodille.
 - Tuotteen nimi ja ostoskorin tuotemäärä tulostuvat Consoleen jokaisen lisäyksen jälkeen.
 - Footer on lisatty Canvasin alareunaan omalla varjollaan.
+- Vaiheen 3.2 ostoskoridata on testattu Console-tulosteilla toimivaksi.
+- MenuScrollView on siirretty vasemmalle ja RightPanel luotu oikealle ostoskorin ja ravintolainformaation alueeksi.
+- RightPanelille on tehty MenuScrollViewin kanssa yhtenäinen visuaalinen tyyli, mukaan lukien reunat ja varjo.
+- RightPanel sisältää InfoContent-objektin suljetun ostoskorin tilaa varten.
+- Footeriin on lisätty CartStatusText, CartTotalText ja OpenCartButton.
+- CartContentPanel on luotu RightPanelin sisään avattavaa ostoskorilistaa varten.
+- CartContentPanel sisältää CartTitle-, CloseCartButton-, CartScrollView- ja CartTotalText-objektit.
+- CartScrollViewn Content käyttää Vertical Layout Group- ja Content Size Fitter -komponentteja.
+- CartItemRow-prefab ja CartItemRow-skripti näyttävät ostoskorituotteen nimen sekä hinnan.
+- CartUI-skripti luo ostoskoririvit cartItems-listasta ja laskee loppusumman.
+- MenuManager päivittää CartUI-näkymän sekä Footerin tuotemäärän ja loppusumman aina, kun tuote lisätään ostoskoriin.
+- CartContentPanel pidetään aktiivisena, mutta piilotetaan Canvas Group -komponentilla: Alpha 0, Interactable pois ja Blocks Raycasts pois.
+- Unity 6.6:ssa Scrollbarin käytöstä poistaminen aiheutti IndexOutOfRangeException-virheen. Virhe vältetään Scrollbar Visibility -asetuksella Permanent ja piilottamalla ostoskoripaneeli Canvas Groupilla eikä Set Active -asetuksella.
 
 ## Tehtävänannon vaatimukset
 
@@ -59,15 +72,19 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Seuraavaksi
 
-1. Testaa Play-tilassa, että jokaisen tuotteen Lisaa tilaukseen -painike lisää oikean tuotteen ostoskoriin ja Consoleen tulostuu nimi sekä määrä.
-2. Varmista, että sama tuote voidaan lisätä useita kertoja.
-3. Seuraavassa vaiheessa suunnitellaan MenuScrollView vasemmalle ja ostoskoripaneeli oikealle.
+1. Testaa Play-tilassa MenuManagerin Inspector-viittaukset: Cart UI, Cart Status Text ja Cart Total Text.
+2. Lisää tuotteita ja varmista, että Footerin tuotemäärä ja loppusumma päivittyvät oikein.
+3. Aseta CartContentPanelin Canvas Groupin Alpha väliaikaisesti arvoon 1 ja varmista, että oikealle luodaan yksi CartItemRow jokaista cartItems-listan tuotetta kohti.
+4. Palauta Canvas Groupin Alpha arvoon 0.
+5. Toteuta OpenCartButton- ja CloseCartButton-painikkeiden avaus- ja sulkemislogiikka.
+6. Lisää CartContentPanelille nopea pyörähdys-, skaalaus- ja häivytysanimaatio.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
-- Ostoskori on toistaiseksi vain `cartItems`-datalista ja Console-tuloste; sen käyttöliittymää ei ole vielä toteutettu.
-- Ostoskori tulee myohemmin MenuScrollViewn oikealle puolelle. Nykyinen keskitetty Scroll View on valiaikainen asettelu.
+- Ostoskorin UI-rakennetta ei ole vielä testattu Play-tilassa.
+- Ostoskorin avaus-, sulkemis- ja pyörähtävä animaatio puuttuvat vielä.
+- Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -79,5 +96,5 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Paivitetty projekti Unity-versioon `6000.6.0f1` ja toteutettu vaihe 3.2: Lisaa tilaukseen -painike lisää oikean `MenuItem`-olion `cartItems`-listaan.
-- Seuraava aloitus: Testaa ostoskoridatan toiminta Play-tilassa ja varmista Console-tulosteista, että tuote ja ostoskorin määrä ovat oikein.
+- Tehty: Paivitetty projekti Unity-versioon `6000.6.0f1`, toteutettu vaihe 3.2 ja rakennettu vaiheen 3.3 ostoskorin UI-rakenne, riviprefab, CartUI-skripti, Footer-yhteenveto sekä MenuManagerin UI-päivitykset.
+- Seuraava aloitus: Testaa ensin ostoskoririvien, Footerin tuotemäärän ja loppusumman toiminta Play-tilassa. Toteuta vasta testin jälkeen ostoskorin avaus-, sulkemis- ja pyörähtävä animaatio.
