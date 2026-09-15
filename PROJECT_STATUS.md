@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-14
+Paivitetty: 2026-09-15
 
 ## Projektin tavoite
 
@@ -62,6 +62,7 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - CartContentPanel pidetään aktiivisena, mutta piilotetaan Canvas Group -komponentilla: Alpha 0, Interactable pois ja Blocks Raycasts pois.
 - InfoContentilla on oma Canvas Group. Footerin OpenCartButton kutsuu CartUI.ToggleCart()-metodia ja vaihtaa tekstin muotojen "Näytä tilaus" ja "Sulje tilaus" välillä.
 - CartContentPanelin avaamisessa ja sulkemisessa on CanvasGroup-häivytys, skaalaus, siirtymä Footer-painikkeen kohdalta sekä 3D-tyylinen X/Y/Z-käännös.
+- CartUI-komponentissa on Inspectorin `Hidden Opacity` -liukusäädin. Se määrittää vain avausanimaation alkuhetken näkyvyyden; suljettu ostoskori pysyy aina täysin piilossa (alpha 0), jotta Footer-painike toimii.
 - Unity 6.6:ssa Scrollbarin käytöstä poistaminen aiheutti IndexOutOfRangeException-virheen. Virhe vältetään Scrollbar Visibility -asetuksella Permanent ja piilottamalla ostoskoripaneeli Canvas Groupilla eikä Set Active -asetuksella.
 
 ## Tehtävänannon vaatimukset
@@ -98,5 +99,5 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Vaihe 3.3 on viimeistelty. Kuitin otsikko, ostoskoririvit ja loppusumma vierivat yhtena kokonaisuutena RightPanelissa. Footerin yksi painike avaa ja sulkee kuitin, ja avauksessa/sulkemisessa on 3D-tyylinen animaatio.
+- Tehty: Vaihe 3.3 on viimeistelty. Kuitin otsikko, ostoskoririvit ja loppusumma vierivat yhtena kokonaisuutena RightPanelissa. Footerin yksi painike avaa ja sulkee kuitin, ja avauksessa/sulkemisessa on 3D-tyylinen animaatio. Avausanimaation alkuopasiteettia voi säätää CartUI-komponentin `Hidden Opacity` -asetuksella.
 - Seuraava aloitus: Odota seuraavaa tehtävänantoa. Tuleva ostoskorin hallintavaihe alkaa vahvistusikkunan suunnittelusta ja toteutuksesta, ei yksittaisista poisto- tai tyhjennyspainikkeista.

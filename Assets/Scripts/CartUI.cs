@@ -12,6 +12,7 @@ public class CartUI : MonoBehaviour
     [SerializeField] private TMP_Text toggleButtonLabel;
     [SerializeField] private RectTransform toggleButtonTransform;
     [SerializeField] private float animationDuration = 0.38f;
+    [SerializeField, Range(0f, 1f)] private float hiddenOpacity = 0.25f;
     [SerializeField] private float hiddenScale = 0.68f;
     [SerializeField] private float hiddenPitch = 12f;
     [SerializeField] private float hiddenYaw = -78f;
@@ -96,7 +97,7 @@ public class CartUI : MonoBehaviour
     private System.Collections.IEnumerator AnimateCart(bool shouldOpen)
     {
         float elapsed = 0f;
-        float startValue = cartCanvasGroup.alpha;
+        float startValue = shouldOpen ? hiddenOpacity : cartCanvasGroup.alpha;
         float targetValue = shouldOpen ? 1f : 0f;
 
         while (elapsed < animationDuration)
