@@ -1,12 +1,10 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-15
+Paivitetty: 2026-09-16
 
 ## Projektin tavoite
 
-Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa
-tuotteet kategorioittain ja perustua rakenteiseen dataan, jotta tuotteita ja
-kategorioita voidaan lisata ilman UI-koodin kopiointia.
+Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuotteet kategorioittain ja perustua rakenteiseen dataan, jotta tuotteita ja kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Nykyinen tila
 
@@ -15,6 +13,7 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
+- Nykyinen pääpaino: UI-animaatioiden viimeistely ja ostoskorin hallinnan valmistelu
 
 ## Tehty
 
@@ -38,25 +37,25 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - Kategoriapainikkeilla on oma vihrea kehysgrafiikka, musta erotusura, hover-savy, painallussavy ja painumisefekti.
 - Kategoriapainikkeet suodattavat tuotteet: Menu, Alkuruoat, Pääruoat, Jälkiruoat ja Juomat.
 - Valittu kategoria jaa aktiiviseen savyyn ja vieritys palautuu kategorian vaihdossa listan alkuun.
-- MenuScrollView vierittaa vain pystysuunnassa, kayttaa Clamped-liiketta ja inertiaa.
-- Tuotekorttien valia ja varjostusta on viimeistelty vihrea-musta-oranssiin ilmeeseen.
-- Lisaa tilaukseen -painike on rakennettu uudelleen omilla ShadowLayer- ja Face-kerroksilla; se vaalenee hoverissa ja painuu alas klikattaessa.
+- MenuScrollView vierittaa vain pystysuunnassa, käyttää Clamped-liikettä ja inertiaa.
+- Tuotekorttien väliä ja varjostusta on viimeistelty vihrea-musta-oranssiin ilmeeseen.
+- Lisää tilaukseen -painike on rakennettu uudelleen omilla ShadowLayer- ja Face-kerroksilla; se vaalenee hoverissa ja painuu alas klikattaessa.
 - `MenuManager` sisältää `cartItems`-listan valittuja tuotteita varten.
-- Jokaisen dynaamisesti luodun `MenuItemCard`-kortin Lisaa tilaukseen -painike välittää oikean `MenuItem`-olion `MenuManager.AddToCart`-metodille.
+- Jokaisen dynaamisesti luodun `MenuItemCard`-kortin Lisää tilaukseen -painike välittää oikean `MenuItem`-olion `MenuManager.AddToCart`-metodille.
 - Tuotteen nimi ja ostoskorin tuotemäärä tulostuvat Consoleen jokaisen lisäyksen jälkeen.
-- Footer on lisatty Canvasin alareunaan omalla varjollaan.
+- Footer on lisätty Canvasin alareunaan omalla varjollaan.
 - Vaiheen 3.2 ostoskoridata on testattu Console-tulosteilla toimivaksi.
 - MenuScrollView on siirretty vasemmalle ja RightPanel luotu oikealle ostoskorin ja ravintolainformaation alueeksi.
 - RightPanelille on tehty MenuScrollViewin kanssa yhtenäinen visuaalinen tyyli, mukaan lukien reunat ja varjo.
 - RightPanel sisältää InfoContent-objektin suljetun ostoskorin tilaa varten.
 - Footeriin on lisätty CartStatusText, CartTotalText ja OpenCartButton.
 - CartContentPanel on luotu RightPanelin sisään avattavaa ostoskorilistaa varten.
-- CartContentPanelin CartScrollView tayttaa RightPanelin, ja Viewport maskaa vierivan kuitin paneelin reunojen sisaan.
-- CartScrollViewn Contentissa ovat kuitin otsikko, CartRowsContainer, loppusumma ja tulevat kuitin toimintopainikkeet. Koko kuitti vierii yhtena kokonaisuutena.
-- CartRowsContainerin sisaan luodaan dynaamiset CartItemRow-rivit. CartUI poistaa paivityksessa vain CartItemRow-rivit, joten otsikko ja loppusumma sailyvat.
-- CartScrollViewn Content ja CartRowsContainer kayttavat Vertical Layout Group- ja Content Size Fitter -komponentteja.
+- CartContentPanelin CartScrollView täyttää RightPanelin, ja Viewport maskaa vierivan kuitin paneelin reunojen sisään.
+- CartScrollViewn Contentissa ovat kuitin otsikko, CartRowsContainer, loppusumma ja tulevat kuitin toimintopainikkeet. Koko kuitti vierii yhtenä kokonaisuutena.
+- CartRowsContainerin sisään luodaan dynaamiset CartItemRow-rivit. CartUI poistaa päivityksessä vain CartItemRow-rivit, joten otsikko ja loppusumma säilyvät.
+- CartScrollViewn Content ja CartRowsContainer käyttävät Vertical Layout Group - ja Content Size Fitter -komponentteja.
 - CartItemRow-prefab ja CartItemRow-skripti näyttävät ostoskorituotteen nimen sekä hinnan.
-- CartItemRow-prefabin taustakuva on tehty lapinakyvaksi, joten kuitissa nakyvat vain tuotteen nimi ja hinta.
+- CartItemRow-prefabin taustakuva on tehty läpinäkyväksi, joten kuitissa näkyvät vain tuotteen nimi ja hinta.
 - CartUI-skripti luo ostoskoririvit cartItems-listasta ja laskee loppusumman.
 - MenuManager päivittää CartUI-näkymän sekä Footerin tuotemäärän ja loppusumman aina, kun tuote lisätään ostoskoriin.
 - CartContentPanel pidetään aktiivisena, mutta piilotetaan Canvas Group -komponentilla: Alpha 0, Interactable pois ja Blocks Raycasts pois.
@@ -64,6 +63,7 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 - CartContentPanelin avaamisessa ja sulkemisessa on CanvasGroup-häivytys, skaalaus, siirtymä Footer-painikkeen kohdalta sekä 3D-tyylinen X/Y/Z-käännös.
 - CartUI-komponentissa on Inspectorin `Hidden Opacity` -liukusäädin. Se määrittää vain avausanimaation alkuhetken näkyvyyden; suljettu ostoskori pysyy aina täysin piilossa (alpha 0), jotta Footer-painike toimii.
 - Unity 6.6:ssa Scrollbarin käytöstä poistaminen aiheutti IndexOutOfRangeException-virheen. Virhe vältetään Scrollbar Visibility -asetuksella Permanent ja piilottamalla ostoskoripaneeli Canvas Groupilla eikä Set Active -asetuksella.
+- Info-kuvaan voidaan lisätä hento flip-tyylinen animaatio, joka suoritetaan vain silloin, kun ostoskori on kiinni.
 
 ## Tehtävänannon vaatimukset
 
@@ -78,16 +78,18 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Seuraavaksi
 
-1. Odota seuraavaa tehtävänantoa ennen uusien ostoskoritoimintojen toteuttamista.
-2. Toteuta myöhemmin yksi uudelleenkaytettava vahvistusikkuna Canvasin alle: ostoskoririvin klikkaus vahvistaa yksittaisen tuotteen poiston ja kuitin loppusumman klikkaus vahvistaa koko korin tyhjennyksen.
-3. Lisaa myohemmin kuitin loppusumman alle vierivat "Vahvista tilaus"- ja "Peru tilaus" -painikkeet. Peru tilaus tarvitsee vahvistusikkunan ennen korin tyhjennysta.
-4. Lisää kategoriapainikkeille kuvakkeet, jos ne kuuluvat tulevaan tehtävänantoon.
+1. Hienosäädä InfoContentin kuvaan hento flip-animaatio, joka toimii vain kun ostoskori on suljettu.
+2. Tarkista, että animaatio ei häiritse oikean paneelin avaus/sulku-tilaa.
+3. Tee vahvistusikkuna yksittäisen tuotteen poistolle ja koko korin tyhjennykselle.
+4. Lisää kuitin loppusummaan "Vahvista tilaus"- ja "Peru tilaus" -painikkeet.
+5. Lisää tarvittaessa kategoriapainikkeiden kuvakkeet, jos tehtävänanto niin vaatii.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
-- Yksittaisen tuotteen poisto, koko ostoskorin tyhjennys, tilauksen vahvistus ja tilauksen peruutus on suunniteltu, mutta niita ei ole viela toteutettu.
+- Yksittäisen tuotteen poisto, koko ostoskorin tyhjennys, tilauksen vahvistus ja tilauksen peruutus on suunniteltu, mutta niitä ei ole vielä toteutettu.
+- Info-kuvan hento animaatio on suunniteltu ja testattavaksi, mutta sen viimeinen visual-sääto odottaa Unity-testin.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -99,5 +101,6 @@ kategorioita voidaan lisata ilman UI-koodin kopiointia.
 
 ## Viimeisin tyokerta
 
-- Tehty: Vaihe 3.3 on viimeistelty. Kuitin otsikko, ostoskoririvit ja loppusumma vierivat yhtena kokonaisuutena RightPanelissa. Footerin yksi painike avaa ja sulkee kuitin, ja avauksessa/sulkemisessa on 3D-tyylinen animaatio. Avausanimaation alkuopasiteettia voi säätää CartUI-komponentin `Hidden Opacity` -asetuksella.
-- Seuraava aloitus: Odota seuraavaa tehtävänantoa. Tuleva ostoskorin hallintavaihe alkaa vahvistusikkunan suunnittelusta ja toteutuksesta, ei yksittaisista poisto- tai tyhjennyspainikkeista.
+- Tehty: UI-pohja, ostoskori, oikean paneelin luonti, layout, avaus/sulku-animaatio ja summalaskenta on saatu toimimaan.
+- Nykyinen fokus: hento InfoContent-kuvan flip-animaatio, joka aktivoituu vain silloin, kun ostoskori on suljettu.
+- Seuraava aloitus: tee kuvaan pieni, elegantti flip-efekti ja sen jälkeen siirry ostoskorin hallintavaiheeseen vahvistusikkunan kanssa.

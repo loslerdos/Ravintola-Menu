@@ -1675,15 +1675,15 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 1
   m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
+  m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
   m_characterHorizontalScale: 1
@@ -1876,6 +1876,7 @@ GameObject:
   - component: {fileID: 611772872}
   - component: {fileID: 611772874}
   - component: {fileID: 611772873}
+  - component: {fileID: 611772875}
   m_Layer: 5
   m_Name: InfoImage
   m_TagString: Untagged
@@ -1940,6 +1941,29 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 611772871}
   m_CullTransparentMesh: 1
+--- !u!114 &611772875
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 611772871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87c6eb0303ff2e24297965f4a8aa7124, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::InfoImageRotator
+  image: {fileID: 611772873}
+  cartUI: {fileID: 694926253}
+  sprites:
+  - {fileID: 21300000, guid: 46fb8ed1e61a3f84a8121b177c2f5929, type: 3}
+  - {fileID: 21300000, guid: f56b0a55fb5d47c4cb28ebe3d72a0dd3, type: 3}
+  minDelay: 2
+  maxDelay: 4
+  spinDuration: 0.9
+  flipAngle: 90
+  swapAngle: 82
+  allowSpriteSwap: 1
 --- !u!1 &613784134
 GameObject:
   m_ObjectHideFlags: 0
@@ -2308,6 +2332,7 @@ MonoBehaviour:
   toggleButtonLabel: {fileID: 1339689232}
   toggleButtonTransform: {fileID: 973391181}
   animationDuration: 0.22
+  hiddenOpacity: 0.25
   hiddenScale: 0.96
   hiddenPitch: 60
   hiddenYaw: -78
@@ -2512,8 +2537,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 32
-  m_fontSizeBase: 32
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -3604,98 +3629,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!1 &1085532231
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1085532233}
-  - component: {fileID: 1085532232}
-  m_Layer: 0
-  m_Name: GeminiNappula
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!212 &1085532232
-SpriteRenderer:
-  serializedVersion: 3
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1085532231}
-  m_Enabled: 1
-  m_CastShadows: 0
-  m_ReceiveShadows: 0
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 0
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_SmallMeshCulling: 1
-  m_ForceMeshLod: -1
-  m_MeshLodSelectionBias: 0
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
-  m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
-  m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 0
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 2b05df202e91e78409fb010b0219df38, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_FlipX: 0
-  m_FlipY: 0
-  m_DrawMode: 0
-  m_Size: {x: 13.16, y: 4.49}
-  m_AdaptiveModeThreshold: 0.5
-  m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 0
-  m_SpriteSortPoint: 0
-  m_BlendShapeWeights: []
---- !u!4 &1085532233
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1085532231}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 903.8484, y: 865.7039, z: -508.47253}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1189231406
 GameObject:
   m_ObjectHideFlags: 0
@@ -3897,6 +3830,12 @@ MonoBehaviour:
       specialNote: 
       category: Alkuruoka
       price: 6.5
+    - id: 103
+      productName: Caprese
+      description: "Mozzarellaa, tomaattia, basilikaa ja oliivi\xF6ljy\xE4"
+      specialNote: 
+      category: Alkuruoka
+      price: 8.9
   - categoryName: "P\xE4\xE4ruoat"
     menuItems:
     - id: 201
@@ -3911,6 +3850,12 @@ MonoBehaviour:
       specialNote: "T\xE4ll\xE4 pastalla on voitettu Pasta World Day 2024 "
       category: "P\xE4\xE4ruoka"
       price: 15.5
+    - id: 203
+      productName: Pollo al Limone
+      description: Sitruunalla maustettua kanaa ja paahdettuja perunoita
+      specialNote: ' '
+      category: "P\xE4\xE4ruoka"
+      price: 17.9
   - categoryName: "J\xE4lkiruoat"
     menuItems:
     - id: 301
@@ -3925,6 +3870,12 @@ MonoBehaviour:
       specialNote: "saattaa sis\xE4lt\xE4\xE4 p\xE4hkin\xE4\xE4"
       category: "J\xE4lkiruoka"
       price: 5.9
+    - id: 303
+      productName: Panna Cotta
+      description: Vaniljaista panna cottaa ja marjakastiketta
+      specialNote: 
+      category: "J\xE4lkiruoka"
+      price: 6.9
   - categoryName: Juomat
     menuItems:
     - id: 401
@@ -3939,6 +3890,12 @@ MonoBehaviour:
       specialNote: 
       category: Juoma
       price: 3.5
+    - id: 403
+      productName: Aranciata
+      description: Italialainen appelsiinilimonaadi
+      specialNote: 
+      category: Juoma
+      price: 4
 --- !u!4 &1279960657
 Transform:
   m_ObjectHideFlags: 0
@@ -7188,4 +7145,3 @@ SceneRoots:
   - {fileID: 613784138}
   - {fileID: 2026326897}
   - {fileID: 1279960657}
-  - {fileID: 1085532233}

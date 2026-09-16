@@ -24,6 +24,7 @@ public class CartUI : MonoBehaviour
     private Vector3 visiblePosition;
     private Vector3 hiddenPosition;
 
+    public bool IsCartOpen => isCartOpen;
     private void Awake()
     {
         cartTransform = transform as RectTransform;
