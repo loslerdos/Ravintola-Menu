@@ -5,8 +5,15 @@ using UnityEngine.UI;
 
 public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
 {
+    public enum ButtonGroup
+    {
+        MenuCategory,
+        ApplicationNavigation
+    }
+
     [SerializeField] private Image buttonFace;
     [SerializeField] private TMP_Text label;
+    [SerializeField] private ButtonGroup buttonGroup;
     [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color hoverColor = new Color(0.86f, 0.92f, 0.86f, 1f);
     [SerializeField] private Color pressedColor = new Color(0.42f, 0.5f, 0.42f, 1f);
@@ -24,7 +31,8 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
     private bool pointerIsOver;
     private bool isSelected;
 
-    private static CategoryButtonMotion selectedButton;
+    private static CategoryButtonMotion selectedCategoryButton;
+    private static CategoryButtonMotion selectedApplicationButton;
 
     private void Awake()
     {
@@ -85,6 +93,7 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
 
     public void Select()
     {
+        CategoryButtonMotion selectedButton = GetSelectedButton();
         if (selectedButton != null && selectedButton != this)
         {
             selectedButton.isSelected = false;
@@ -93,9 +102,28 @@ public class CategoryButtonMotion : MonoBehaviour, IPointerEnterHandler, IPointe
                 : selectedButton.normalColor;
         }
 
-        selectedButton = this;
+        SetSelectedButton(this);
         isSelected = true;
         targetColor = selectedColor;
+    }
+
+    private CategoryButtonMotion GetSelectedButton()
+    {
+        return buttonGroup == ButtonGroup.MenuCategory
+            ? selectedCategoryButton
+            : selectedApplicationButton;
+    }
+
+    private void SetSelectedButton(CategoryButtonMotion button)
+    {
+        if (buttonGroup == ButtonGroup.MenuCategory)
+        {
+            selectedCategoryButton = button;
+        }
+        else
+        {
+            selectedApplicationButton = button;
+        }
     }
 
     private void SetButtonColor(Color color)
