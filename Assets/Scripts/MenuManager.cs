@@ -115,6 +115,47 @@ public void ConfirmOrder()
     RefreshCart();
 }
 
+[ContextMenu("Testaa JSON-muunnos")]
+private void TestJsonSerialization()
+{
+    OrderData testOrder = new OrderData
+    {
+        orderId = "TEST-001",
+        items = new List<MenuItem>
+        {
+            new MenuItem
+            {
+                id = 101,
+                productName = "Margherita",
+                description = "Tomaattia, mozzarellaa ja basilikaa",
+                specialNote = string.Empty,
+                category = "Pääruoka",
+                price = 12.9f
+            },
+            new MenuItem
+            {
+                id = 401,
+                productName = "Limonata",
+                description = "Italialainen sitruunalimonadi",
+                specialNote = string.Empty,
+                category = "Juoma",
+                price = 4f
+            }
+        },
+        total = 16.9f
+    };
+
+    string json = JsonUtility.ToJson(testOrder, true);
+    Debug.Log("SERIALISOITU JSON:\n" + json);
+
+    OrderData loadedOrder = JsonUtility.FromJson<OrderData>(json);
+
+    Debug.Log(
+        $"DESERIALISOITU TILAUS: {loadedOrder.orderId}, " +
+        $"tuotteita: {loadedOrder.items.Count}, " +
+        $"yhteensä: {loadedOrder.total:0.00} €");
+}
+
     private void UpdateFooterUI()
 {
     int productCount = 0;
