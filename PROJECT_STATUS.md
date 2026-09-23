@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-21
+Paivitetty: 2026-09-23
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: JSON-tekstin tallentamisen suunnittelu seuraavassa vaiheessa
+- Nykyinen pääpaino: JSON-näkymän Play-testit ja layoutin viimeistely
 
 ## Tehty
 
@@ -74,7 +74,13 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Dynaamisia ostoskoririvejä käytetään uudelleen CanvasGroup- ja LayoutElement-asetuksilla, eikä niitä tuhota päivityksessä.
 - MenuScrollViewn Vertical Scrollbar Visibility on asetettu Permanent-tilaan Unity 6.6 UGUI:n Selectable.OnDisable-/Scrollbar.OnDisable-virheen välttämiseksi.
 - Vaihe 3.5 on valmis: OrderData-luokka kuvaa tilauksen tunnisteen, tuotteet ja loppusumman.
-- MenuManagerin Context Menu -testi serialisoi testitilauksen JsonUtility.ToJson-metodilla ja deserialisoi sen takaisin JsonUtility.FromJson<OrderData>-metodilla. JSONia ei vielä kirjoiteta tiedostoon.
+- `OrderLineData` säilyttää jokaisella tilausrivillä `MenuItem`-tiedot, kappalemäärän ja rivin loppusumman.
+- Vahvistettu tilaus muodostetaan oikeasta ostoskorista, kirjoitetaan `Application.persistentDataPath`-kansioon JSON-tiedostoksi ja luetaan takaisin `JsonUtility.FromJson`-metodilla.
+- Canvasin alle on rakennettu pysyvä JSON-näkymä: `JsonPage`, `JsonTitleText`, `JsonLoadButton`, `JsonOrderPanel`, `JsonViewport` ja `JsonOutputText`.
+- JSON-näkymän scene-objektit on kytketty `MenuManager`-komponenttiin Inspector-viittauksilla. Käyttöliittymäobjekteja ei luoda ajonaikaisesti koodissa.
+- JSON-painike avaa oman näkymänsä ja piilottaa vain Ruokalista-sivulle kuuluvat `MenuCategoryButtons`-, `MenuScrollView`- ja `RightPanel`-alueet.
+- `JsonLoadButton` etsii uusimman `order_*.json`-tiedoston, deserialisoi sen ja näyttää muotoillun JSON-tekstin vieritettävässä `JsonOrderPanel`-paneelissa.
+- Projektissa käytetään vain kahta vakiintunutta nappityyliä: isot navigaatio- ja kategoriapainikkeet sekä pienet `AddToOrderButtonMotion`-toimintopainikkeet.
 
 ## Tehtävänannon vaatimukset
 
@@ -89,29 +95,31 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Toteuta seuraava vaihe: kirjoita JsonUtility.ToJson-tuottama JSON-teksti tiedostoksi ja lue se takaisin.
-2. Suunnittele tallennettavan tilauksen rivirakenne niin, että myös CartItem.quantity säilyy tiedostossa.
-3. Liitä myöhemmin vahvistettu tilaus tallennuslogiikkaan ennen cartItems.Clear()-kutsua.
-4. Lisää vasta tulevissa vaiheissa päänavigaation henkilökuntatoiminnot: tilaukset, JSON-näkymä, tietokanta ja ohje.
+1. Testaa JSON-näkymä Play-tilassa sekä lyhyellä että pitkällä tallennetulla tilauksella.
+2. Tarkista `JsonOrderPanel`-paneelin vieritys, tekstin rivitys ja palautuminen listan alkuun.
+3. Viimeistele tarvittaessa vain scenen RectTransform- ja TMP-asetuksia; älä rakenna käyttöliittymää koodissa.
+4. Kun JSON-näkymä on visuaalisesti valmis, jatka seuraavaan tehtävänannon toimintoon yksi selkeä vaihe kerrallaan.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
-- JSON-muunnos on testattu vain muistissa. Tilausta ei vielä tallenneta tiedostoon eikä lueta levyltä.
-- OrderData käyttää harjoitusvaiheessa List<MenuItem>-listaa. Todellisessa tallennuksessa tarvitaan tilausrivien rakenne, joka säilyttää kappalemäärän.
-- Päänavigaation painikkeet ovat visuaalisesti ja tilamuutoksen osalta valmiita, mutta niiden varsinaiset työntekijätoiminnot ovat toteuttamatta.
+- JSON-näkymän lopullinen layout ja vieritys pitää vielä tarkistaa Play-tilassa eripituisilla tilauksilla.
+- Päänavigaation Tilaukset-, Tietokanta- ja Ohje-toiminnot ovat vielä toteuttamatta.
 
 ## Työskentelyohje seuraavalle kerralle
 
 1. Lue tämä tiedosto ennen työn aloittamista.
 2. Tarkista projektin nykyinen tila Unityssa ja Gitissä.
 3. Tee yksi selkeä työvaihe kerrallaan.
-4. Päivita tämän tiedoston kohdat `Nykyinen tila`, `Tehty`, `Seuraavaksi` ja `Keskeneraiset asiat ja ongelmat`.
-5. Tallenna muutokset, tee commit ja suorita `git push`.
+4. Rakenna käyttöliittymä pysyvinä scene-objekteina Canvasin alle ja kytke viittaukset Inspectorissa. Älä luo sovelluksen UI:ta ajonaikaisesti koodissa.
+5. Käytä vain projektin kahta olemassa olevaa nappityyliä.
+6. Varmista jokainen Hierarchy- ja Inspector-vaihe ennen seuraavaa koodimuutosta.
+7. Päivita tämän tiedoston kohdat `Nykyinen tila`, `Tehty`, `Seuraavaksi` ja `Keskeneraiset asiat ja ongelmat`.
+8. Tallenna muutokset, tee commit ja suorita `git push`.
 
 ## Viimeisin tyokerta
 
-- Tehty: 3.4 ostoskorin kappalemäärähallinta, tyhjän korin tila ja tilauksen vahvistus on toteutettu ja testattu. 3.5 JSON-serialisointi ja deserialisointi on testattu Unityn Consolessa ilman tiedostotallennusta.
-- Nykyinen fokus: seuraava JSON-tiedoston tallennus- ja lukuvaihe.
-- Seuraava aloitus: rakenna quantity-säilyttävä tilausdata ja kirjoita vahvistettu tilaus JSON-tiedostoksi ennen ostoskorin tyhjentämistä.
+- Tehty: quantity-säilyttävä JSON-tallennus, tiedoston lukeminen sekä scene- ja Inspector-pohjainen JSON-näkymä on toteutettu.
+- Nykyinen fokus: JSON-näkymän Play-testaus ja visuaalinen viimeistely.
+- Seuraava aloitus: luo lyhyt ja pitkä tilaus, avaa JSON-välilehti, paina `Näytä tallennettu tilaus` ja tarkista paneelin vieritys sekä tekstin asettelu.
