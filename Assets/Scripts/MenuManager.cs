@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,11 +13,26 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private TMP_Text cartStatusText;
     [SerializeField] private TMP_Text cartTotalText;
 
+    [Header("JSON-näkymä")]
+    [SerializeField] private GameObject jsonPage;
+    [SerializeField] private GameObject jsonOrderPanel;
+    [SerializeField] private Button jsonLoadButton;
+    [SerializeField] private TMP_Text jsonOutputText;
+    [SerializeField] private ScrollRect jsonOrderScrollView;
+
     public List<CartItem> cartItems = new List<CartItem>();
 
     private CanvasGroup menuCategoryButtonsCanvasGroup;
     private CanvasGroup menuScrollViewCanvasGroup;
     private CanvasGroup rightPanelCanvasGroup;
+
+    private enum AppPage
+    {
+        Menu,
+        Json
+    }
+
+    private AppPage currentPage = AppPage.Menu;
 
     public List<MenuCategory> categories = new List<MenuCategory>
     {
@@ -32,6 +48,8 @@ public class MenuManager : MonoBehaviour
         cartUI.Initialize(ConfirmOrder);
         RefreshCart();
         CreateApplicationNavigation();
+        InitializeJsonView();
+        SelectApplicationPage(true, null, AppPage.Menu);
     }
 
     public void ShowAllItems()
@@ -68,108 +86,131 @@ public class MenuManager : MonoBehaviour
     }
 
     public void AddToCart(MenuItem menuItem)
-{
-    cartUI.ClearOrderStatus();
-
-    CartItem cartItem = cartItems.Find(item => item.menuItem.id == menuItem.id);
-
-    if (cartItem == null)
     {
-        cartItems.Add(new CartItem(menuItem));
-    }
-    else
-    {
-        cartItem.quantity++;
-    }
+        cartUI.ClearOrderStatus();
 
-    RefreshCart();
-}
+        CartItem cartItem = cartItems.Find(item => item.menuItem.id == menuItem.id);
 
-public void ChangeCartItemQuantity(CartItem cartItem, int change)
-{
-    cartItem.quantity += change;
-
-    if (cartItem.quantity <= 0)
-    {
-        cartItems.Remove(cartItem);
-    }
-
-    RefreshCart();
-}
-
-private void RefreshCart()
-{
-    cartUI.UpdateCartUI(cartItems, ChangeCartItemQuantity);
-    UpdateFooterUI();
-}
-
-public void ConfirmOrder()
-{
-    if (cartItems.Count == 0)
-    {
-        return;
-    }
-
-    cartItems.Clear();
-    cartUI.ShowOrderConfirmation();
-    RefreshCart();
-}
-
-[ContextMenu("Testaa JSON-muunnos")]
-private void TestJsonSerialization()
-{
-    OrderData testOrder = new OrderData
-    {
-        orderId = "TEST-001",
-        items = new List<MenuItem>
+        if (cartItem == null)
         {
-            new MenuItem
+            cartItems.Add(new CartItem(menuItem));
+        }
+        else
+        {
+            cartItem.quantity++;
+        }
+
+        RefreshCart();
+    }
+
+    public void ChangeCartItemQuantity(CartItem cartItem, int change)
+    {
+        cartItem.quantity += change;
+
+        if (cartItem.quantity <= 0)
+        {
+            cartItems.Remove(cartItem);
+        }
+
+        RefreshCart();
+    }
+
+    private void RefreshCart()
+    {
+        cartUI.UpdateCartUI(cartItems, ChangeCartItemQuantity);
+        UpdateFooterUI();
+    }
+
+    public void ConfirmOrder()
+    {
+        if (cartItems.Count == 0)
+        {
+            return;
+        }
+
+        OrderData orderData = BuildOrderData();
+        SaveOrderToJson(orderData);
+
+        cartItems.Clear();
+        cartUI.ShowOrderConfirmation();
+        RefreshCart();
+    }
+
+    private OrderData BuildOrderData()
+    {
+        OrderData orderData = new OrderData
+        {
+            orderId = "ORDER-" + System.DateTime.Now.ToString("yyyyMMdd-HHmmss"),
+            items = new List<OrderLineData>(),
+            total = 0f
+        };
+
+        foreach (CartItem cartItem in cartItems)
+        {
+            float lineTotal = cartItem.menuItem.price * cartItem.quantity;
+            orderData.items.Add(new OrderLineData
             {
-                id = 101,
-                productName = "Margherita",
-                description = "Tomaattia, mozzarellaa ja basilikaa",
-                specialNote = string.Empty,
-                category = "Pääruoka",
-                price = 12.9f
-            },
-            new MenuItem
-            {
-                id = 401,
-                productName = "Limonata",
-                description = "Italialainen sitruunalimonadi",
-                specialNote = string.Empty,
-                category = "Juoma",
-                price = 4f
-            }
-        },
-        total = 16.9f
-    };
+                menuItem = cartItem.menuItem,
+                quantity = cartItem.quantity,
+                lineTotal = lineTotal
+            });
+            orderData.total += lineTotal;
+        }
 
-    string json = JsonUtility.ToJson(testOrder, true);
-    Debug.Log("SERIALISOITU JSON:\n" + json);
+        return orderData;
+    }
 
-    OrderData loadedOrder = JsonUtility.FromJson<OrderData>(json);
+    private void SaveOrderToJson(OrderData orderData)
+    {
+        string directory = Application.persistentDataPath;
+        Directory.CreateDirectory(directory);
 
-    Debug.Log(
-        $"DESERIALISOITU TILAUS: {loadedOrder.orderId}, " +
-        $"tuotteita: {loadedOrder.items.Count}, " +
-        $"yhteensä: {loadedOrder.total:0.00} €");
-}
+        string fileName = "order_" + orderData.orderId + ".json";
+        string path = Path.Combine(directory, fileName);
+
+        string json = JsonUtility.ToJson(orderData, true);
+        File.WriteAllText(path, json);
+
+        Debug.Log("TILAUS TALLENNETTU: " + path + "\n" + json);
+    }
+
+    private OrderData LoadOrderFromJson(string fileName)
+    {
+        string path = Path.Combine(Application.persistentDataPath, fileName);
+
+        if (!File.Exists(path))
+        {
+            Debug.LogWarning("Tiedostoa ei löytynyt: " + path);
+            return null;
+        }
+
+        string json = File.ReadAllText(path);
+        OrderData orderData = JsonUtility.FromJson<OrderData>(json);
+
+        if (orderData == null)
+        {
+            Debug.LogWarning("Ladattu JSON oli tyhjä tai virheellinen: " + path);
+            return null;
+        }
+
+        Debug.Log("TILAUS LUETTU: " + path + "\n" + json);
+        return orderData;
+    }
 
     private void UpdateFooterUI()
-{
-    int productCount = 0;
-    float total = 0f;
-
-    foreach (CartItem cartItem in cartItems)
     {
-        productCount += cartItem.quantity;
-        total += cartItem.menuItem.price * cartItem.quantity;
-    }
+        int productCount = 0;
+        float total = 0f;
 
-    cartStatusText.text = $"OSTOSKORI: {productCount} TUOTETTA";
-    cartTotalText.text = "YHTEENSÄ: " + total.ToString("0.00") + " €";
-}
+        foreach (CartItem cartItem in cartItems)
+        {
+            productCount += cartItem.quantity;
+            total += cartItem.menuItem.price * cartItem.quantity;
+        }
+
+        cartStatusText.text = $"OSTOSKORI: {productCount} TUOTETTA";
+        cartTotalText.text = "YHTEENSÄ: " + total.ToString("0.00") + " €";
+    }
 
     private void ClearCards()
     {
@@ -184,6 +225,68 @@ private void TestJsonSerialization()
         Canvas.ForceUpdateCanvases();
         menuScrollView.verticalNormalizedPosition = 1f;
     }
+
+    private void InitializeJsonView()
+{
+    if (jsonPage == null ||
+        jsonOrderPanel == null ||
+        jsonLoadButton == null ||
+        jsonOutputText == null ||
+        jsonOrderScrollView == null)
+    {
+        Debug.LogError("JSON-näkymän Inspector-viittauksia puuttuu.");
+        return;
+    }
+
+    jsonPage.SetActive(false);
+    jsonOrderPanel.SetActive(false);
+    jsonOutputText.text = string.Empty;
+
+    jsonLoadButton.onClick.RemoveAllListeners();
+    jsonLoadButton.onClick.AddListener(LoadLatestOrderToJsonView);
+}
+
+private void LoadLatestOrderToJsonView()
+{
+    string directoryPath = Application.persistentDataPath;
+
+    if (!Directory.Exists(directoryPath))
+    {
+        Debug.LogWarning("Tallennuskansiota ei löytynyt.");
+        return;
+    }
+
+    DirectoryInfo directory = new DirectoryInfo(directoryPath);
+    FileInfo[] files = directory.GetFiles("order_*.json");
+
+    if (files.Length == 0)
+    {
+        Debug.LogWarning("Tallennettuja tilauksia ei löytynyt.");
+        return;
+    }
+
+    FileInfo latestFile = files[0];
+
+    for (int index = 1; index < files.Length; index++)
+    {
+        if (files[index].LastWriteTimeUtc > latestFile.LastWriteTimeUtc)
+        {
+            latestFile = files[index];
+        }
+    }
+
+    OrderData loadedOrder = LoadOrderFromJson(latestFile.Name);
+    if (loadedOrder == null)
+    {
+        return;
+    }
+
+    jsonOutputText.text = JsonUtility.ToJson(loadedOrder, true);
+    jsonOrderPanel.SetActive(true);
+
+    Canvas.ForceUpdateCanvases();
+    jsonOrderScrollView.verticalNormalizedPosition = 1f;
+}
 
     private void CreateApplicationNavigation()
     {
@@ -201,18 +304,19 @@ private void TestJsonSerialization()
         menuScrollViewCanvasGroup = GetOrAddCanvasGroup(menuScrollView.gameObject);
         rightPanelCanvasGroup = GetOrAddCanvasGroup(rightPanel.gameObject);
 
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_MenuButton", "RUOKALISTA", true);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_OrdersButton", "TILAUKSET", false);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_JsonButton", "JSON", false);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_DatabaseButton", "TIETOKANTA", false);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_HelpButton", "OHJE", false);
+        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_MenuButton", "RUOKALISTA", true, AppPage.Menu);
+        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_OrdersButton", "TILAUKSET", false, AppPage.Menu);
+        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_JsonButton", "JSON", false, AppPage.Json);
+        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_DatabaseButton", "TIETOKANTA", false, AppPage.Menu);
+        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_HelpButton", "OHJE", false, AppPage.Menu);
     }
 
     private void ConfigureApplicationNavigationButton(
         Transform parent,
         string objectName,
         string buttonLabel,
-        bool showsMenu)
+        bool showsMenu,
+        AppPage targetPage)
     {
         Transform buttonTransform = parent.Find(objectName);
         if (buttonTransform == null)
@@ -228,7 +332,7 @@ private void TestJsonSerialization()
         label.text = buttonLabel;
 
         CategoryButtonMotion navigationMotion = buttonTransform.GetComponent<CategoryButtonMotion>();
-        button.onClick.AddListener(() => SelectApplicationPage(showsMenu, navigationMotion));
+        button.onClick.AddListener(() => SelectApplicationPage(showsMenu, navigationMotion, targetPage));
 
         if (showsMenu)
         {
@@ -236,12 +340,25 @@ private void TestJsonSerialization()
         }
     }
 
-    private void SelectApplicationPage(bool showsMenu, CategoryButtonMotion navigationMotion)
+    private void SelectApplicationPage(bool showsMenu, CategoryButtonMotion navigationMotion, AppPage targetPage)
     {
-        navigationMotion.Select();
+        currentPage = targetPage;
+
+        if (navigationMotion != null)
+        {
+            navigationMotion.Select();
+        }
+
         SetCanvasGroupVisible(menuCategoryButtonsCanvasGroup, showsMenu);
         SetCanvasGroupVisible(menuScrollViewCanvasGroup, showsMenu);
         SetCanvasGroupVisible(rightPanelCanvasGroup, showsMenu);
+
+        bool showJsonPage = targetPage == AppPage.Json;
+
+        if (jsonPage != null)
+        {
+            jsonPage.SetActive(showJsonPage);
+        }
     }
 
     private static CanvasGroup GetOrAddCanvasGroup(GameObject target)
