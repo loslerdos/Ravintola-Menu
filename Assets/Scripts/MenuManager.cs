@@ -19,17 +19,29 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button jsonLoadButton;
     [SerializeField] private TMP_Text jsonOutputText;
     [SerializeField] private ScrollRect jsonOrderScrollView;
+    [SerializeField] private string archivedOrdersDirectoryName = "ArchivedOrders";
+
+    [Header("Keittiö")]
+    [SerializeField] private GameObject kitchenPage;
+    [SerializeField] private Transform kitchenOrdersContent;
+    [SerializeField] private TMP_Text kitchenEmptyStateText;
+    [SerializeField] private Button kitchenActiveButton;
+    [SerializeField] private Button kitchenArchiveButton;
+    [SerializeField] private Button kitchenRefreshButton;
+    [SerializeField] private GameObject kitchenOrderRowTemplate;
 
     public List<CartItem> cartItems = new List<CartItem>();
 
     private CanvasGroup menuCategoryButtonsCanvasGroup;
     private CanvasGroup menuScrollViewCanvasGroup;
     private CanvasGroup rightPanelCanvasGroup;
+    private bool showingArchivedKitchenOrders;
 
     private enum AppPage
     {
         Menu,
-        Json
+        Json,
+        Kitchen
     }
 
     private AppPage currentPage = AppPage.Menu;
@@ -49,6 +61,7 @@ public class MenuManager : MonoBehaviour
         RefreshCart();
         CreateApplicationNavigation();
         InitializeJsonView();
+        InitializeKitchenView();
         SelectApplicationPage(true, null, AppPage.Menu);
     }
 
@@ -197,6 +210,40 @@ public class MenuManager : MonoBehaviour
         return orderData;
     }
 
+    public string[] GetActiveOrderFilePaths()
+    {
+        if (!Directory.Exists(Application.persistentDataPath))
+        {
+            return new string[0];
+        }
+
+        return Directory.GetFiles(Application.persistentDataPath, "order_*.json");
+    }
+
+    public bool ArchiveOrder(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        {
+            Debug.LogWarning("Arkistoitavaa tilaustiedostoa ei löytynyt: " + filePath);
+            return false;
+        }
+
+        string archiveDirectory = Path.Combine(Application.persistentDataPath, archivedOrdersDirectoryName);
+        Directory.CreateDirectory(archiveDirectory);
+
+        string archivePath = Path.Combine(archiveDirectory, Path.GetFileName(filePath));
+        if (File.Exists(archivePath))
+        {
+            archivePath = Path.Combine(
+                archiveDirectory,
+                Path.GetFileNameWithoutExtension(filePath) + "_" + System.DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json");
+        }
+
+        File.Move(filePath, archivePath);
+        Debug.Log("TILAUS ARKISTOITU: " + archivePath);
+        return true;
+    }
+
     private void UpdateFooterUI()
     {
         int productCount = 0;
@@ -288,11 +335,186 @@ private void LoadLatestOrderToJsonView()
     jsonOrderScrollView.verticalNormalizedPosition = 1f;
 }
 
+    private void InitializeKitchenView()
+    {
+        kitchenPage ??= FindSceneObject("KitchenPage")?.gameObject;
+        kitchenOrdersContent ??= FindSceneObject("KitchenOrdersContent");
+        kitchenEmptyStateText ??= FindSceneObject("KitchenEmptyStateText")?.GetComponent<TMP_Text>();
+        kitchenActiveButton ??= FindSceneObject("KitchenActiveButton")?.GetComponent<Button>();
+        kitchenArchiveButton ??= FindSceneObject("KitchenArchiveButton")?.GetComponent<Button>();
+        kitchenRefreshButton ??= FindSceneObject("KitchenRefreshButton")?.GetComponent<Button>();
+        kitchenOrderRowTemplate ??= FindSceneObject("KitchenTestOrderRow")?.gameObject;
+
+        if (kitchenPage == null ||
+            kitchenOrdersContent == null ||
+            kitchenEmptyStateText == null ||
+            kitchenActiveButton == null ||
+            kitchenArchiveButton == null ||
+            kitchenRefreshButton == null ||
+            kitchenOrderRowTemplate == null)
+        {
+            Debug.LogError("Keittiönäkymän Inspector-viittauksia puuttuu.");
+            return;
+        }
+
+        kitchenPage.SetActive(false);
+        kitchenOrderRowTemplate.SetActive(false);
+        kitchenActiveButton.onClick.RemoveAllListeners();
+        kitchenArchiveButton.onClick.RemoveAllListeners();
+        kitchenRefreshButton.onClick.RemoveAllListeners();
+
+        kitchenActiveButton.onClick.AddListener(ShowActiveKitchenOrders);
+        kitchenArchiveButton.onClick.AddListener(ShowArchivedKitchenOrders);
+        kitchenRefreshButton.onClick.AddListener(RefreshKitchenOrders);
+
+        ShowActiveKitchenOrders();
+    }
+
+    private void ShowActiveKitchenOrders()
+    {
+        showingArchivedKitchenOrders = false;
+        RefreshKitchenOrders();
+    }
+
+    private void ShowArchivedKitchenOrders()
+    {
+        showingArchivedKitchenOrders = true;
+        RefreshKitchenOrders();
+    }
+
+    private void RefreshKitchenOrders()
+    {
+        if (kitchenOrdersContent == null || kitchenEmptyStateText == null || kitchenOrderRowTemplate == null)
+        {
+            return;
+        }
+
+        ClearKitchenOrderRows();
+
+        string directory = showingArchivedKitchenOrders
+            ? Path.Combine(Application.persistentDataPath, archivedOrdersDirectoryName)
+            : Application.persistentDataPath;
+        string[] orderPaths = Directory.Exists(directory)
+            ? Directory.GetFiles(directory, "order_*.json")
+            : new string[0];
+
+        kitchenEmptyStateText.text = showingArchivedKitchenOrders
+            ? "Ei arkistoituja tilauksia."
+            : "Ei aktiivisia tilauksia.";
+        kitchenEmptyStateText.gameObject.SetActive(orderPaths.Length == 0);
+
+        foreach (string orderPath in orderPaths)
+        {
+            OrderData orderData = LoadOrderFromJsonAtPath(orderPath);
+            if (orderData != null)
+            {
+                CreateKitchenOrderRow(orderPath, orderData);
+            }
+        }
+    }
+
+    private OrderData LoadOrderFromJsonAtPath(string path)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        return JsonUtility.FromJson<OrderData>(File.ReadAllText(path));
+    }
+
+    private void CreateKitchenOrderRow(string orderPath, OrderData orderData)
+    {
+        GameObject row = Instantiate(kitchenOrderRowTemplate, kitchenOrdersContent);
+        row.name = "KitchenOrderRow_" + orderData.orderId;
+        row.SetActive(true);
+
+        TMP_Text orderText = row.transform.Find("KitchenTestOrderText")?.GetComponent<TMP_Text>();
+        if (orderText == null)
+        {
+            orderText = row.GetComponentInChildren<TMP_Text>(true);
+        }
+
+        if (orderText != null)
+        {
+            orderText.text = FormatKitchenOrder(orderData);
+        }
+
+        Button archiveButton = row.transform.Find("KitchenTestArchiveButton")?.GetComponent<Button>();
+        if (archiveButton == null)
+        {
+            archiveButton = row.GetComponentInChildren<Button>(true);
+        }
+
+        if (archiveButton != null)
+        {
+            archiveButton.onClick.RemoveAllListeners();
+            archiveButton.gameObject.SetActive(!showingArchivedKitchenOrders);
+
+            if (!showingArchivedKitchenOrders)
+            {
+                archiveButton.interactable = true;
+                archiveButton.onClick.AddListener(() =>
+                {
+                    if (ArchiveOrder(orderPath))
+                    {
+                        RefreshKitchenOrders();
+                    }
+                });
+            }
+        }
+    }
+
+    private static string FormatKitchenOrder(OrderData orderData)
+    {
+        List<string> lines = new List<string> { orderData.orderId };
+
+        foreach (OrderLineData line in orderData.items)
+        {
+            string productName = line.menuItem == null ? "Tuote" : line.menuItem.productName;
+            lines.Add($"{productName} x{line.quantity}");
+        }
+
+        lines.Add($"Yhteensä: {orderData.total:0.00} €");
+        return string.Join("\n", lines);
+    }
+
+    private void ClearKitchenOrderRows()
+    {
+        for (int index = kitchenOrdersContent.childCount - 1; index >= 0; index--)
+        {
+            Transform child = kitchenOrdersContent.GetChild(index);
+            if (child.gameObject != kitchenOrderRowTemplate && child.name != "KitchenEmptyStateText")
+            {
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    private Transform FindSceneObject(string objectName)
+    {
+        Canvas canvas = FindAnyObjectByType<Canvas>();
+
+        if (canvas == null)
+        {
+            return null;
+        }
+
+        foreach (Transform child in canvas.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == objectName)
+            {
+                return child;
+            }
+        }
+
+        return null;
+    }
     private void CreateApplicationNavigation()
     {
-        Transform applicationNavigation = GameObject.Find("ApplicationNavigation")?.transform;
-        Transform menuCategoryButtons = GameObject.Find("MenuCategoryButtons")?.transform;
-        Transform rightPanel = GameObject.Find("RightPanel")?.transform;
+        Transform applicationNavigation = FindSceneObject("ApplicationNavigation");
+        Transform menuCategoryButtons = FindSceneObject("MenuCategoryButtons");
+        Transform rightPanel = FindSceneObject("RightPanel");
 
         if (applicationNavigation == null || menuCategoryButtons == null || rightPanel == null)
         {
@@ -305,10 +527,10 @@ private void LoadLatestOrderToJsonView()
         rightPanelCanvasGroup = GetOrAddCanvasGroup(rightPanel.gameObject);
 
         ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_MenuButton", "RUOKALISTA", true, AppPage.Menu);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_OrdersButton", "TILAUKSET", false, AppPage.Menu);
         ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_JsonButton", "JSON", false, AppPage.Json);
         ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_DatabaseButton", "TIETOKANTA", false, AppPage.Menu);
         ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_HelpButton", "OHJE", false, AppPage.Menu);
+        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_OrdersButton", "TILAUKSET", false, AppPage.Kitchen);
     }
 
     private void ConfigureApplicationNavigationButton(
@@ -354,10 +576,21 @@ private void LoadLatestOrderToJsonView()
         SetCanvasGroupVisible(rightPanelCanvasGroup, showsMenu);
 
         bool showJsonPage = targetPage == AppPage.Json;
+        bool showKitchenPage = targetPage == AppPage.Kitchen;
 
         if (jsonPage != null)
         {
             jsonPage.SetActive(showJsonPage);
+        }
+
+        if (kitchenPage != null)
+        {
+            kitchenPage.SetActive(showKitchenPage);
+        }
+
+        if (showKitchenPage)
+        {
+            ShowActiveKitchenOrders();
         }
     }
 
@@ -369,6 +602,11 @@ private void LoadLatestOrderToJsonView()
 
     private static void SetCanvasGroupVisible(CanvasGroup canvasGroup, bool isVisible)
     {
+        if (canvasGroup == null)
+        {
+            return;
+        }
+
         canvasGroup.alpha = isVisible ? 1f : 0f;
         canvasGroup.interactable = isVisible;
         canvasGroup.blocksRaycasts = isVisible;

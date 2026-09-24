@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-23
+Paivitetty: 2026-09-24
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: JSON-näkymän Play-testit ja layoutin viimeistely
+- Nykyinen pääpaino: vaihe 3.7, tallennettujen tilausten hallinta keittiönäkymässä
 
 ## Tehty
 
@@ -81,6 +81,12 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - JSON-painike avaa oman näkymänsä ja piilottaa vain Ruokalista-sivulle kuuluvat `MenuCategoryButtons`-, `MenuScrollView`- ja `RightPanel`-alueet.
 - `JsonLoadButton` etsii uusimman `order_*.json`-tiedoston, deserialisoi sen ja näyttää muotoillun JSON-tekstin vieritettävässä `JsonOrderPanel`-paneelissa.
 - Projektissa käytetään vain kahta vakiintunutta nappityyliä: isot navigaatio- ja kategoriapainikkeet sekä pienet `AddToOrderButtonMotion`-toimintopainikkeet.
+- Vaihe 3.7 on toteutettu: keittiönäkymä lukee aktiiviset `order_*.json`-tilaukset ja näyttää ne olemassa olevan scene-rivin pohjalta.
+- Keittiön `Aktiiviset`, `Arkisto` ja `Päivitä` -painikkeet on kytketty Inspectorin kautta.
+- `MenuManager.GetActiveOrderFilePaths()` lukee aktiiviset tilaustiedostot ja `ArchiveOrder()` siirtää valmiin tilauksen `ArchivedOrders`-kansioon.
+- Keittiön tilausrivi näyttää tilausnumeron, tuotteet, kappalemäärät ja loppusumman.
+- Arkistoiduissa tilauksissa `Valmis`-painike piilotetaan; aktiivisissa tilauksissa se arkistoi kyseisen tilauksen.
+- Alkuperäinen `KitchenTestOrderRow` toimii piilotettuna scene-template-rivinä, josta näkyvät tilausrivit kloonataan.
 
 ## Tehtävänannon vaatimukset
 
@@ -95,16 +101,17 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Testaa JSON-näkymä Play-tilassa sekä lyhyellä että pitkällä tallennetulla tilauksella.
-2. Tarkista `JsonOrderPanel`-paneelin vieritys, tekstin rivitys ja palautuminen listan alkuun.
-3. Viimeistele tarvittaessa vain scenen RectTransform- ja TMP-asetuksia; älä rakenna käyttöliittymää koodissa.
-4. Kun JSON-näkymä on visuaalisesti valmis, jatka seuraavaan tehtävänannon toimintoon yksi selkeä vaihe kerrallaan.
+1. Testaa Play-tilassa aktiivisen tilauksen näkyminen ja `Valmis`-painike.
+2. Testaa `Arkisto`-välilehti ja varmista, ettei arkistoidussa rivissä ole valmis-painiketta.
+3. Testaa `Päivitä`-painike sekä tyhjän aktiivisen ja tyhjän arkiston viestit.
+4. Tarkista vielä keittiön layout eripituisilla tilauksilla.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
 - JSON-näkymän lopullinen layout ja vieritys pitää vielä tarkistaa Play-tilassa eripituisilla tilauksilla.
+- Keittiönäkymä on toteutettu; jäljellä on Play-testien ja layoutin viimeistely.
 - Päänavigaation Tilaukset-, Tietokanta- ja Ohje-toiminnot ovat vielä toteuttamatta.
 
 ## Työskentelyohje seuraavalle kerralle
@@ -120,6 +127,6 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Viimeisin tyokerta
 
-- Tehty: quantity-säilyttävä JSON-tallennus, tiedoston lukeminen sekä scene- ja Inspector-pohjainen JSON-näkymä on toteutettu.
-- Nykyinen fokus: JSON-näkymän Play-testaus ja visuaalinen viimeistely.
-- Seuraava aloitus: luo lyhyt ja pitkä tilaus, avaa JSON-välilehti, paina `Näytä tallennettu tilaus` ja tarkista paneelin vieritys sekä tekstin asettelu.
+- Tehty: quantity-säilyttävä JSON-tallennus, scene- ja Inspector-pohjainen JSON-näkymä sekä vaihe 3.7:n keittiön aktiivisten tilausten, arkiston ja päivityksen toiminta.
+- Nykyinen fokus: vaihe 3.7:n Play-testaus ja layoutin viimeistely.
+- Seuraava aloitus: testaa aktiivinen tilaus, arkistoi se, tarkista Arkisto-välilehti ja varmista valmis-painikkeen piilotus.
