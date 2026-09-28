@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-24
+Paivitetty: 2026-09-28
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: vaihe 3.7, tallennettujen tilausten hallinta keittiönäkymässä
+- Nykyinen pääpaino: vaihe 3.8 on valmis. SQLite-pohjainen Products-tuoterekisteri ja sen read-only Tietokanta-näkymä toimivat. Asiakasmenu käyttää vielä Inspectorissa määritettyä categories-listaa.
 
 ## Tehty
 
@@ -87,6 +87,16 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Keittiön tilausrivi näyttää tilausnumeron, tuotteet, kappalemäärät ja loppusumman.
 - Arkistoiduissa tilauksissa `Valmis`-painike piilotetaan; aktiivisissa tilauksissa se arkistoi kyseisen tilauksen.
 - Alkuperäinen `KitchenTestOrderRow` toimii piilotettuna scene-template-rivinä, josta näkyvät tilausrivit kloonataan.
+- Vaihe 3.7 on validoitu Play-tilassa: keittiörivien dynaamiset korkeudet, vieritys sekä aktiivisten ja arkistoitujen tilausten listat toimivat.
+- Keittiön aktiivisten ja arkistoitujen tilausrivien tausta-, teksti- ja otsikkovärit ovat `MenuManager`-komponentin Inspectorissa. Värit eivät ole UI-logiikassa kovakoodattuja.
+- Arkistorivissä käytetään samaa toimintopainiketta kuin aktiivisessa rivissä: aktiivisessa näkymässä se näyttää `Valmis` ja arkistoi tilauksen, arkistossa se näyttää `Poista`.
+- Arkistotilauksen poisto avaa `KitchenDeleteConfirmPanel`-vahvistusikkunan. `Peruuta` säilyttää JSON-tiedoston, ja `Poista pysyvästi` poistaa valitun arkistotilaustiedoston sekä päivittää listan.
+- Vaihe 3.8 on valmis: Unityyn on asennettu SQLite-net for Unity -paketti ja SQLite-yhteys on testattu toimivaksi.
+- `DatabaseProduct` kuvaa `Products`-taulun rivin: id, tuotteen nimi, kuvaus, lisähuomautus, kategoria ja hinta.
+- `ProductDatabase` luo `ravintola-menu.db`-tietokannan `Application.persistentDataPath`-hakemistoon, luo `Products`-taulun ja kategorian indeksin tarvittaessa sekä lisää aloitustuotteet vain tyhjään tauluun.
+- Aloitusdata muodostetaan nykyisestä Inspectorissa olevasta `MenuManager.categories`-listasta. Asiakasmenua ei vielä ladata SQLite-tietokannasta.
+- `DatabasePage` on pysyvä scene-käyttöliittymä. `TIETOKANTA`-navigaatiopainike avaa sen, ja `PÄIVITÄ` hakee Products-taulun tuotteet uudelleen.
+- Tietokantatuotteet näytetään read-only-listana `DatabaseProductRowTemplate`-pohjasta. Lista järjestetään `id`-kentän mukaan, jotta se vastaa alkuperäisen menun järjestystä.
 
 ## Tehtävänannon vaatimukset
 
@@ -101,18 +111,19 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Testaa Play-tilassa aktiivisen tilauksen näkyminen ja `Valmis`-painike.
-2. Testaa `Arkisto`-välilehti ja varmista, ettei arkistoidussa rivissä ole valmis-painiketta.
-3. Testaa `Päivitä`-painike sekä tyhjän aktiivisen ja tyhjän arkiston viestit.
-4. Tarkista vielä keittiön layout eripituisilla tilauksilla.
+1. Suunnittele seuraava tietokantavaihe ennen toteutusta ja tee uusi Git-paluupiste ennen muutoksia.
+2. Luonteva seuraava vaihe on Products-taulun CRUD: tuotteen lisäys, muokkaus ja poisto vahvistuksineen.
+3. Vasta CRUD-vaiheen luotettavan testauksen jälkeen suunnitellaan asiakasmenun datalähteen siirtäminen Inspector-listasta SQLiteen.
+4. Pidä asiakasmenu, ostoskori, JSON-tilaukset ja keittiötoiminnot ennallaan, kunnes uusi SQLite-datalähde on erikseen toteutettu ja testattu.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
-- JSON-näkymän lopullinen layout ja vieritys pitää vielä tarkistaa Play-tilassa eripituisilla tilauksilla.
-- Keittiönäkymä on toteutettu; jäljellä on Play-testien ja layoutin viimeistely.
-- Päänavigaation Tilaukset-, Tietokanta- ja Ohje-toiminnot ovat vielä toteuttamatta.
+- JSON-näkymän lopullinen layout ja vieritys voidaan vielä viimeistellä eripituisilla tilauksilla.
+- Ohje-välilehti on edelleen placeholder.
+- Products-taulu on tässä vaiheessa read-only käyttöliittymässä. Tuotteiden lisäys, muokkaus ja poisto eivät ole vielä käytössä.
+- Asiakasmenu käyttää edelleen Inspectorin `categories`-listaa. SQLite toimii toistaiseksi erillisenä tuoterekisterinä.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -127,6 +138,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Viimeisin tyokerta
 
-- Tehty: quantity-säilyttävä JSON-tallennus, scene- ja Inspector-pohjainen JSON-näkymä sekä vaihe 3.7:n keittiön aktiivisten tilausten, arkiston ja päivityksen toiminta.
-- Nykyinen fokus: vaihe 3.7:n Play-testaus ja layoutin viimeistely.
-- Seuraava aloitus: testaa aktiivinen tilaus, arkistoi se, tarkista Arkisto-välilehti ja varmista valmis-painikkeen piilotus.
+- Vaihe 3.7 viimeisteltiin ja validoitiin: arkiston poisto vahvistusikkunalla, Inspectorista säädettävät keittiörivien värit sekä toimiva vieritys ja layout.
+- Vaihe 3.8 toteutettiin ja validoitiin: SQLite-net, Products-taulu, kertaluonteinen aloitusdata, `DatabasePage`, Products-lista ja `PÄIVITÄ`-toiminto.
+- Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.
+- Seuraava aloitus: keskustele ja suunnittele Products-CRUD-vaihe ennen koodin tai scenen muuttamista.
