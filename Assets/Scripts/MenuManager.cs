@@ -30,6 +30,13 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button kitchenRefreshButton;
     [SerializeField] private GameObject kitchenOrderRowTemplate;
 
+    [Header("Tietokanta")]
+    [SerializeField] private GameObject databasePage;
+    [SerializeField] private Transform databaseProductsContent;
+    [SerializeField] private TMP_Text databaseEmptyStateText;
+    [SerializeField] private Button databaseRefreshButton;
+    [SerializeField] private GameObject databaseProductRowTemplate;
+
     [Header("Keittiön poistovahvistus")]
     [SerializeField] private GameObject kitchenDeleteConfirmPanel;
     [SerializeField] private Button kitchenDeleteConfirmButton;
@@ -52,12 +59,15 @@ public class MenuManager : MonoBehaviour
     private bool showingArchivedKitchenOrders;
     private bool kitchenViewInitialized;
     private string pendingArchivedOrderPath;
+    private ScrollRect databaseProductsScrollView;
+    private bool databaseViewInitialized;
 
     private enum AppPage
     {
         Menu,
         Json,
-        Kitchen
+        Kitchen,
+        Database
     }
 
     private AppPage currentPage = AppPage.Menu;
@@ -80,6 +90,7 @@ public class MenuManager : MonoBehaviour
         CreateApplicationNavigation();
         InitializeJsonView();
         InitializeKitchenView();
+        InitializeDatabaseView();
         SelectApplicationPage(true, null, AppPage.Menu);
     }
 
@@ -464,6 +475,171 @@ public class MenuManager : MonoBehaviour
         ShowActiveKitchenOrders();
     }
 
+    private void InitializeDatabaseView()
+    {
+        if (databasePage == null)
+        {
+            databasePage = FindSceneObject("DatabasePage")?.gameObject;
+        }
+
+        if (databaseProductsContent == null)
+        {
+            databaseProductsContent = FindSceneObject("DatabaseProductsContent");
+        }
+
+        if (databaseProductsScrollView == null &&
+            databaseProductsContent != null)
+        {
+            databaseProductsScrollView =
+                databaseProductsContent.GetComponentInParent<ScrollRect>();
+        }
+
+        if (databaseProductsScrollView == null)
+        {
+            databaseProductsScrollView =
+                FindSceneObject("DatabaseProductsPanel")
+                ?.GetComponent<ScrollRect>();
+        }
+
+        if (databaseEmptyStateText == null)
+        {
+            databaseEmptyStateText =
+                FindSceneObject("DatabaseEmptyStateText")
+                ?.GetComponent<TMP_Text>();
+        }
+
+        if (databaseRefreshButton == null)
+        {
+            databaseRefreshButton =
+                FindSceneObject("DatabaseRefreshButton")
+                ?.GetComponent<Button>();
+        }
+
+        if (databaseProductRowTemplate == null)
+        {
+            databaseProductRowTemplate =
+                FindSceneObject("DatabaseProductRowTemplate")
+                ?.gameObject;
+        }
+
+        if (databasePage == null ||
+            databaseProductsContent == null ||
+            databaseEmptyStateText == null ||
+            databaseRefreshButton == null ||
+            databaseProductRowTemplate == null)
+        {
+            Debug.LogError("Tietokantanäkymän Inspector-viittauksia puuttuu.");
+            return;
+        }
+
+        databasePage.SetActive(false);
+        databaseProductRowTemplate.SetActive(false);
+
+        databaseRefreshButton.onClick.RemoveAllListeners();
+        databaseRefreshButton.onClick.AddListener(RefreshDatabaseProducts);
+
+        databaseViewInitialized = true;
+    }
+
+    private void RefreshDatabaseProducts()
+    {
+        if (!databaseViewInitialized ||
+            databaseProductsContent == null ||
+            databaseEmptyStateText == null ||
+            databaseProductRowTemplate == null)
+        {
+            return;
+        }
+
+        ClearDatabaseProductRows();
+
+        List<DatabaseProduct> products;
+
+        try
+        {
+            products = ProductDatabase.GetAllProducts();
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError(
+                "Tietokannan tuotteita ei voitu hakea."
+                + "\n" + exception.Message);
+
+            return;
+        }
+
+        databaseEmptyStateText.gameObject.SetActive(products.Count == 0);
+
+        foreach (DatabaseProduct product in products)
+        {
+            CreateDatabaseProductRow(product);
+        }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(
+            databaseProductsContent as RectTransform);
+
+        if (databaseProductsScrollView != null)
+        {
+            databaseProductsScrollView.verticalNormalizedPosition = 1f;
+        }
+    }
+
+    private void CreateDatabaseProductRow(DatabaseProduct product)
+    {
+        GameObject row = Instantiate(
+            databaseProductRowTemplate,
+            databaseProductsContent);
+
+        row.name = "DatabaseProductRow_" + product.id;
+        row.SetActive(true);
+
+        TMP_Text productText = row.transform
+            .Find("DatabaseProductRowText")
+            ?.GetComponent<TMP_Text>();
+
+        if (productText == null)
+        {
+            productText = row.GetComponentInChildren<TMP_Text>(true);
+        }
+
+        if (productText != null)
+        {
+            productText.text =
+                product.id
+                + " | "
+                + product.productName
+                + "\n"
+                + product.category
+                + " | "
+                + product.price.ToString("0.00")
+                + " €";
+        }
+    }
+
+    private void ClearDatabaseProductRows()
+    {
+        for (int index = databaseProductsContent.childCount - 1;
+            index >= 0;
+            index--)
+        {
+            Transform child = databaseProductsContent.GetChild(index);
+
+            if (child.gameObject != databaseProductRowTemplate)
+            {
+                LayoutElement layoutElement = child.GetComponent<LayoutElement>();
+
+                if (layoutElement != null)
+                {
+                    layoutElement.ignoreLayout = true;
+                }
+
+                Destroy(child.gameObject);
+            }
+        }
+    }
+
+    
+
     private void ShowActiveKitchenOrders()
     {
         showingArchivedKitchenOrders = false;
@@ -743,7 +919,7 @@ public class MenuManager : MonoBehaviour
             "ApplicationNavigation_DatabaseButton",
             "TIETOKANTA",
             false,
-            AppPage.Menu);
+            AppPage.Database);
 
         ConfigureApplicationNavigationButton(
             applicationNavigation,
@@ -811,6 +987,7 @@ public class MenuManager : MonoBehaviour
 
         bool showJsonPage = targetPage == AppPage.Json;
         bool showKitchenPage = targetPage == AppPage.Kitchen;
+        bool showDatabasePage = targetPage == AppPage.Database;
 
         if (jsonPage != null)
         {
@@ -822,6 +999,16 @@ public class MenuManager : MonoBehaviour
             kitchenPage.SetActive(showKitchenPage);
         }
 
+        if (databasePage != null)
+        {
+            databasePage.SetActive(showDatabasePage);
+        }
+
+        if (showDatabasePage)
+        {
+            RefreshDatabaseProducts();
+        }
+    
         if (showKitchenPage)
         {
             ShowActiveKitchenOrders();

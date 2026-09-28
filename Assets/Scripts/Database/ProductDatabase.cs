@@ -68,7 +68,7 @@ public static class ProductDatabase
         {
             return connection.Query<DatabaseProduct>(
                 "SELECT * FROM Products " +
-                "ORDER BY category, productName;");
+                "ORDER BY id;");
         }
     }
 
