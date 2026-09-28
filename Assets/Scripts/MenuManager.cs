@@ -30,12 +30,28 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button kitchenRefreshButton;
     [SerializeField] private GameObject kitchenOrderRowTemplate;
 
+    [Header("Keittiön poistovahvistus")]
+    [SerializeField] private GameObject kitchenDeleteConfirmPanel;
+    [SerializeField] private Button kitchenDeleteConfirmButton;
+    [SerializeField] private Button kitchenDeleteCancelButton;
+
+    [Header("Keittiön tilausrivien värit")]
+    [SerializeField] private Color activeOrderBackgroundColor = new Color(0.94f, 0.88f, 0.73f, 1f);
+    [SerializeField] private Color activeOrderTextColor = Color.black;
+    [SerializeField] private Color activeOrderHeaderTextColor = Color.white;
+    [SerializeField] private Color archivedOrderBackgroundColor = new Color(0.53f, 0.62f, 0.64f, 1f);
+    [SerializeField] private Color archivedOrderTextColor = Color.black;
+    [SerializeField] private Color archivedOrderHeaderTextColor = Color.white;
+
     public List<CartItem> cartItems = new List<CartItem>();
 
     private CanvasGroup menuCategoryButtonsCanvasGroup;
     private CanvasGroup menuScrollViewCanvasGroup;
     private CanvasGroup rightPanelCanvasGroup;
+    private ScrollRect kitchenOrdersScrollView;
     private bool showingArchivedKitchenOrders;
+    private bool kitchenViewInitialized;
+    private string pendingArchivedOrderPath;
 
     private enum AppPage
     {
@@ -161,12 +177,14 @@ public class MenuManager : MonoBehaviour
         foreach (CartItem cartItem in cartItems)
         {
             float lineTotal = cartItem.menuItem.price * cartItem.quantity;
+
             orderData.items.Add(new OrderLineData
             {
                 menuItem = cartItem.menuItem,
                 quantity = cartItem.quantity,
                 lineTotal = lineTotal
             });
+
             orderData.total += lineTotal;
         }
 
@@ -228,20 +246,81 @@ public class MenuManager : MonoBehaviour
             return false;
         }
 
-        string archiveDirectory = Path.Combine(Application.persistentDataPath, archivedOrdersDirectoryName);
+        string archiveDirectory = Path.Combine(
+            Application.persistentDataPath,
+            archivedOrdersDirectoryName);
+
         Directory.CreateDirectory(archiveDirectory);
 
         string archivePath = Path.Combine(archiveDirectory, Path.GetFileName(filePath));
+
         if (File.Exists(archivePath))
         {
             archivePath = Path.Combine(
                 archiveDirectory,
-                Path.GetFileNameWithoutExtension(filePath) + "_" + System.DateTime.Now.ToString("yyyyMMdd-HHmmss") + ".json");
+                Path.GetFileNameWithoutExtension(filePath)
+                + "_"
+                + System.DateTime.Now.ToString("yyyyMMdd-HHmmss")
+                + ".json");
         }
 
         File.Move(filePath, archivePath);
         Debug.Log("TILAUS ARKISTOITU: " + archivePath);
         return true;
+    }
+
+    private void RequestArchivedOrderDeletion(string orderPath)
+    {
+        if (!showingArchivedKitchenOrders || string.IsNullOrWhiteSpace(orderPath))
+        {
+            return;
+        }
+
+        pendingArchivedOrderPath = orderPath;
+        kitchenDeleteConfirmPanel.SetActive(true);
+    }
+
+    private void CancelArchivedOrderDeletion()
+    {
+        pendingArchivedOrderPath = null;
+        kitchenDeleteConfirmPanel.SetActive(false);
+    }
+
+    private void ConfirmArchivedOrderDeletion()
+    {
+        string orderPath = pendingArchivedOrderPath;
+        CancelArchivedOrderDeletion();
+
+        if (DeleteArchivedOrder(orderPath))
+        {
+            RefreshKitchenOrders();
+        }
+    }
+
+    private bool DeleteArchivedOrder(string orderPath)
+    {
+        if (string.IsNullOrWhiteSpace(orderPath) || !File.Exists(orderPath))
+        {
+            Debug.LogWarning("Poistettavaa arkistotilausta ei löytynyt: " + orderPath);
+            return false;
+        }
+
+        try
+        {
+            File.Delete(orderPath);
+            Debug.Log("ARKISTOTILAUS POISTETTU: " + orderPath);
+            return true;
+        }
+        catch (IOException exception)
+        {
+            Debug.LogError("Arkistotilausta ei voitu poistaa: " + exception.Message);
+            return false;
+        }
+        catch (System.UnauthorizedAccessException exception)
+        {
+            Debug.LogError("Ei oikeutta poistaa arkistotilausta: " + exception.Message);
+            return false;
+        }
     }
 
     private void UpdateFooterUI()
@@ -274,71 +353,74 @@ public class MenuManager : MonoBehaviour
     }
 
     private void InitializeJsonView()
-{
-    if (jsonPage == null ||
-        jsonOrderPanel == null ||
-        jsonLoadButton == null ||
-        jsonOutputText == null ||
-        jsonOrderScrollView == null)
     {
-        Debug.LogError("JSON-näkymän Inspector-viittauksia puuttuu.");
-        return;
-    }
-
-    jsonPage.SetActive(false);
-    jsonOrderPanel.SetActive(false);
-    jsonOutputText.text = string.Empty;
-
-    jsonLoadButton.onClick.RemoveAllListeners();
-    jsonLoadButton.onClick.AddListener(LoadLatestOrderToJsonView);
-}
-
-private void LoadLatestOrderToJsonView()
-{
-    string directoryPath = Application.persistentDataPath;
-
-    if (!Directory.Exists(directoryPath))
-    {
-        Debug.LogWarning("Tallennuskansiota ei löytynyt.");
-        return;
-    }
-
-    DirectoryInfo directory = new DirectoryInfo(directoryPath);
-    FileInfo[] files = directory.GetFiles("order_*.json");
-
-    if (files.Length == 0)
-    {
-        Debug.LogWarning("Tallennettuja tilauksia ei löytynyt.");
-        return;
-    }
-
-    FileInfo latestFile = files[0];
-
-    for (int index = 1; index < files.Length; index++)
-    {
-        if (files[index].LastWriteTimeUtc > latestFile.LastWriteTimeUtc)
+        if (jsonPage == null ||
+            jsonOrderPanel == null ||
+            jsonLoadButton == null ||
+            jsonOutputText == null ||
+            jsonOrderScrollView == null)
         {
-            latestFile = files[index];
+            Debug.LogError("JSON-näkymän Inspector-viittauksia puuttuu.");
+            return;
         }
+
+        jsonPage.SetActive(false);
+        jsonOrderPanel.SetActive(false);
+        jsonOutputText.text = string.Empty;
+
+        jsonLoadButton.onClick.RemoveAllListeners();
+        jsonLoadButton.onClick.AddListener(LoadLatestOrderToJsonView);
     }
 
-    OrderData loadedOrder = LoadOrderFromJson(latestFile.Name);
-    if (loadedOrder == null)
+    private void LoadLatestOrderToJsonView()
     {
-        return;
+        string directoryPath = Application.persistentDataPath;
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Debug.LogWarning("Tallennuskansiota ei löytynyt.");
+            return;
+        }
+
+        DirectoryInfo directory = new DirectoryInfo(directoryPath);
+        FileInfo[] files = directory.GetFiles("order_*.json");
+
+        if (files.Length == 0)
+        {
+            Debug.LogWarning("Tallennettuja tilauksia ei löytynyt.");
+            return;
+        }
+
+        FileInfo latestFile = files[0];
+
+        for (int index = 1; index < files.Length; index++)
+        {
+            if (files[index].LastWriteTimeUtc > latestFile.LastWriteTimeUtc)
+            {
+                latestFile = files[index];
+            }
+        }
+
+        OrderData loadedOrder = LoadOrderFromJson(latestFile.Name);
+
+        if (loadedOrder == null)
+        {
+            return;
+        }
+
+        jsonOutputText.text = JsonUtility.ToJson(loadedOrder, true);
+        jsonOrderPanel.SetActive(true);
+
+        Canvas.ForceUpdateCanvases();
+        jsonOrderScrollView.verticalNormalizedPosition = 1f;
     }
-
-    jsonOutputText.text = JsonUtility.ToJson(loadedOrder, true);
-    jsonOrderPanel.SetActive(true);
-
-    Canvas.ForceUpdateCanvases();
-    jsonOrderScrollView.verticalNormalizedPosition = 1f;
-}
 
     private void InitializeKitchenView()
     {
         kitchenPage ??= FindSceneObject("KitchenPage")?.gameObject;
         kitchenOrdersContent ??= FindSceneObject("KitchenOrdersContent");
+        kitchenOrdersScrollView ??= kitchenOrdersContent?.GetComponentInParent<ScrollRect>();
+        kitchenOrdersScrollView ??= FindSceneObject("KitchenOrderPanel")?.GetComponent<ScrollRect>();
         kitchenEmptyStateText ??= FindSceneObject("KitchenEmptyStateText")?.GetComponent<TMP_Text>();
         kitchenActiveButton ??= FindSceneObject("KitchenActiveButton")?.GetComponent<Button>();
         kitchenArchiveButton ??= FindSceneObject("KitchenArchiveButton")?.GetComponent<Button>();
@@ -351,7 +433,10 @@ private void LoadLatestOrderToJsonView()
             kitchenActiveButton == null ||
             kitchenArchiveButton == null ||
             kitchenRefreshButton == null ||
-            kitchenOrderRowTemplate == null)
+            kitchenOrderRowTemplate == null ||
+            kitchenDeleteConfirmPanel == null ||
+            kitchenDeleteConfirmButton == null ||
+            kitchenDeleteCancelButton == null)
         {
             Debug.LogError("Keittiönäkymän Inspector-viittauksia puuttuu.");
             return;
@@ -359,14 +444,21 @@ private void LoadLatestOrderToJsonView()
 
         kitchenPage.SetActive(false);
         kitchenOrderRowTemplate.SetActive(false);
+        kitchenDeleteConfirmPanel.SetActive(false);
+
         kitchenActiveButton.onClick.RemoveAllListeners();
         kitchenArchiveButton.onClick.RemoveAllListeners();
         kitchenRefreshButton.onClick.RemoveAllListeners();
+        kitchenDeleteConfirmButton.onClick.RemoveAllListeners();
+        kitchenDeleteCancelButton.onClick.RemoveAllListeners();
 
         kitchenActiveButton.onClick.AddListener(ShowActiveKitchenOrders);
         kitchenArchiveButton.onClick.AddListener(ShowArchivedKitchenOrders);
         kitchenRefreshButton.onClick.AddListener(RefreshKitchenOrders);
+        kitchenDeleteConfirmButton.onClick.AddListener(ConfirmArchivedOrderDeletion);
+        kitchenDeleteCancelButton.onClick.AddListener(CancelArchivedOrderDeletion);
 
+        kitchenViewInitialized = true;
         ShowActiveKitchenOrders();
     }
 
@@ -384,7 +476,10 @@ private void LoadLatestOrderToJsonView()
 
     private void RefreshKitchenOrders()
     {
-        if (kitchenOrdersContent == null || kitchenEmptyStateText == null || kitchenOrderRowTemplate == null)
+        if (!kitchenViewInitialized ||
+            kitchenOrdersContent == null ||
+            kitchenEmptyStateText == null ||
+            kitchenOrderRowTemplate == null)
         {
             return;
         }
@@ -394,6 +489,7 @@ private void LoadLatestOrderToJsonView()
         string directory = showingArchivedKitchenOrders
             ? Path.Combine(Application.persistentDataPath, archivedOrdersDirectoryName)
             : Application.persistentDataPath;
+
         string[] orderPaths = Directory.Exists(directory)
             ? Directory.GetFiles(directory, "order_*.json")
             : new string[0];
@@ -401,15 +497,24 @@ private void LoadLatestOrderToJsonView()
         kitchenEmptyStateText.text = showingArchivedKitchenOrders
             ? "Ei arkistoituja tilauksia."
             : "Ei aktiivisia tilauksia.";
+
         kitchenEmptyStateText.gameObject.SetActive(orderPaths.Length == 0);
 
         foreach (string orderPath in orderPaths)
         {
             OrderData orderData = LoadOrderFromJsonAtPath(orderPath);
+
             if (orderData != null)
             {
                 CreateKitchenOrderRow(orderPath, orderData);
             }
+        }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(kitchenOrdersContent as RectTransform);
+
+        if (kitchenOrdersScrollView != null)
+        {
+            kitchenOrdersScrollView.verticalNormalizedPosition = 1f;
         }
     }
 
@@ -429,7 +534,10 @@ private void LoadLatestOrderToJsonView()
         row.name = "KitchenOrderRow_" + orderData.orderId;
         row.SetActive(true);
 
+        ConfigureKitchenOrderRowLayout(row, orderData);
+
         TMP_Text orderText = row.transform.Find("KitchenTestOrderText")?.GetComponent<TMP_Text>();
+
         if (orderText == null)
         {
             orderText = row.GetComponentInChildren<TMP_Text>(true);
@@ -437,45 +545,121 @@ private void LoadLatestOrderToJsonView()
 
         if (orderText != null)
         {
-            orderText.text = FormatKitchenOrder(orderData);
+            Color headerTextColor = showingArchivedKitchenOrders
+                ? archivedOrderHeaderTextColor
+                : activeOrderHeaderTextColor;
+
+            orderText.text = FormatKitchenOrder(orderData, headerTextColor);
+
+            orderText.color = showingArchivedKitchenOrders
+                ? archivedOrderTextColor
+                : activeOrderTextColor;
         }
 
-        Button archiveButton = row.transform.Find("KitchenTestArchiveButton")?.GetComponent<Button>();
-        if (archiveButton == null)
+        SetKitchenOrderRowBackgroundColor(row, showingArchivedKitchenOrders);
+
+        Button actionButton = row.transform.Find("KitchenTestArchiveButton")?.GetComponent<Button>();
+
+        if (actionButton == null)
         {
-            archiveButton = row.GetComponentInChildren<Button>(true);
+            actionButton = row.GetComponentInChildren<Button>(true);
         }
 
-        if (archiveButton != null)
+        if (actionButton == null)
         {
-            archiveButton.onClick.RemoveAllListeners();
-            archiveButton.gameObject.SetActive(!showingArchivedKitchenOrders);
+            return;
+        }
 
-            if (!showingArchivedKitchenOrders)
+        TMP_Text actionButtonText = actionButton.GetComponentInChildren<TMP_Text>(true);
+
+        actionButton.onClick.RemoveAllListeners();
+        actionButton.gameObject.SetActive(true);
+        actionButton.interactable = true;
+
+        if (showingArchivedKitchenOrders)
+        {
+            if (actionButtonText != null)
             {
-                archiveButton.interactable = true;
-                archiveButton.onClick.AddListener(() =>
-                {
-                    if (ArchiveOrder(orderPath))
-                    {
-                        RefreshKitchenOrders();
-                    }
-                });
+                actionButtonText.text = "POISTA";
             }
+
+            actionButton.onClick.AddListener(() =>
+            {
+                RequestArchivedOrderDeletion(orderPath);
+            });
+        }
+        else
+        {
+            if (actionButtonText != null)
+            {
+                actionButtonText.text = "ARKISTOI";
+            }
+
+            actionButton.onClick.AddListener(() =>
+            {
+                if (ArchiveOrder(orderPath))
+                {
+                    RefreshKitchenOrders();
+                }
+            });
         }
     }
 
-    private static string FormatKitchenOrder(OrderData orderData)
+    private static void ConfigureKitchenOrderRowLayout(GameObject row, OrderData orderData)
     {
-        List<string> lines = new List<string> { orderData.orderId };
+        LayoutElement layoutElement = row.GetComponent<LayoutElement>();
 
-        foreach (OrderLineData line in orderData.items)
+        if (layoutElement == null)
         {
-            string productName = line.menuItem == null ? "Tuote" : line.menuItem.productName;
-            lines.Add($"{productName} x{line.quantity}");
+            return;
+        }
+
+        int lineCount = 2 + (orderData.items == null ? 0 : orderData.items.Count);
+
+        layoutElement.preferredHeight = Mathf.Max(
+            100f,
+            28f + lineCount * 24f);
+    }
+
+    private void SetKitchenOrderRowBackgroundColor(GameObject row, bool isArchived)
+    {
+        Image background = row.GetComponent<Image>();
+
+        if (background == null)
+        {
+            background = row.AddComponent<Image>();
+        }
+
+        background.raycastTarget = false;
+
+        background.color = isArchived
+            ? archivedOrderBackgroundColor
+            : activeOrderBackgroundColor;
+    }
+
+    private static string FormatKitchenOrder(OrderData orderData, Color headerTextColor)
+    {
+        string headerColorHtml = ColorUtility.ToHtmlStringRGBA(headerTextColor);
+
+        List<string> lines = new List<string>
+        {
+            $"<color=#{headerColorHtml}>{orderData.orderId}</color>"
+        };
+
+        if (orderData.items != null)
+        {
+            foreach (OrderLineData line in orderData.items)
+            {
+                string productName = line.menuItem == null
+                    ? "Tuote"
+                    : line.menuItem.productName;
+
+                lines.Add($"{productName} x{line.quantity}");
+            }
         }
 
         lines.Add($"Yhteensä: {orderData.total:0.00} €");
+
         return string.Join("\n", lines);
     }
 
@@ -484,8 +668,17 @@ private void LoadLatestOrderToJsonView()
         for (int index = kitchenOrdersContent.childCount - 1; index >= 0; index--)
         {
             Transform child = kitchenOrdersContent.GetChild(index);
-            if (child.gameObject != kitchenOrderRowTemplate && child.name != "KitchenEmptyStateText")
+
+            if (child.gameObject != kitchenOrderRowTemplate &&
+                child.name != "KitchenEmptyStateText")
             {
+                LayoutElement layoutElement = child.GetComponent<LayoutElement>();
+
+                if (layoutElement != null)
+                {
+                    layoutElement.ignoreLayout = true;
+                }
+
                 Destroy(child.gameObject);
             }
         }
@@ -510,13 +703,16 @@ private void LoadLatestOrderToJsonView()
 
         return null;
     }
+
     private void CreateApplicationNavigation()
     {
         Transform applicationNavigation = FindSceneObject("ApplicationNavigation");
         Transform menuCategoryButtons = FindSceneObject("MenuCategoryButtons");
         Transform rightPanel = FindSceneObject("RightPanel");
 
-        if (applicationNavigation == null || menuCategoryButtons == null || rightPanel == null)
+        if (applicationNavigation == null ||
+            menuCategoryButtons == null ||
+            rightPanel == null)
         {
             Debug.LogError("Päänavigaation käyttöliittymäobjekteja ei löytynyt scenestä.");
             return;
@@ -526,11 +722,40 @@ private void LoadLatestOrderToJsonView()
         menuScrollViewCanvasGroup = GetOrAddCanvasGroup(menuScrollView.gameObject);
         rightPanelCanvasGroup = GetOrAddCanvasGroup(rightPanel.gameObject);
 
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_MenuButton", "RUOKALISTA", true, AppPage.Menu);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_JsonButton", "JSON", false, AppPage.Json);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_DatabaseButton", "TIETOKANTA", false, AppPage.Menu);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_HelpButton", "OHJE", false, AppPage.Menu);
-        ConfigureApplicationNavigationButton(applicationNavigation, "ApplicationNavigation_OrdersButton", "TILAUKSET", false, AppPage.Kitchen);
+        ConfigureApplicationNavigationButton(
+            applicationNavigation,
+            "ApplicationNavigation_MenuButton",
+            "RUOKALISTA",
+            true,
+            AppPage.Menu);
+
+        ConfigureApplicationNavigationButton(
+            applicationNavigation,
+            "ApplicationNavigation_JsonButton",
+            "JSON",
+            false,
+            AppPage.Json);
+
+        ConfigureApplicationNavigationButton(
+            applicationNavigation,
+            "ApplicationNavigation_DatabaseButton",
+            "TIETOKANTA",
+            false,
+            AppPage.Menu);
+
+        ConfigureApplicationNavigationButton(
+            applicationNavigation,
+            "ApplicationNavigation_HelpButton",
+            "OHJE",
+            false,
+            AppPage.Menu);
+
+        ConfigureApplicationNavigationButton(
+            applicationNavigation,
+            "ApplicationNavigation_OrdersButton",
+            "TILAUKSET",
+            false,
+            AppPage.Kitchen);
     }
 
     private void ConfigureApplicationNavigationButton(
@@ -541,6 +766,7 @@ private void LoadLatestOrderToJsonView()
         AppPage targetPage)
     {
         Transform buttonTransform = parent.Find(objectName);
+
         if (buttonTransform == null)
         {
             Debug.LogError($"Päänavigaation painiketta {objectName} ei löytynyt scenestä.");
@@ -553,8 +779,11 @@ private void LoadLatestOrderToJsonView()
         TMP_Text label = buttonTransform.GetComponentInChildren<TMP_Text>(true);
         label.text = buttonLabel;
 
-        CategoryButtonMotion navigationMotion = buttonTransform.GetComponent<CategoryButtonMotion>();
-        button.onClick.AddListener(() => SelectApplicationPage(showsMenu, navigationMotion, targetPage));
+        CategoryButtonMotion navigationMotion =
+            buttonTransform.GetComponent<CategoryButtonMotion>();
+
+        button.onClick.AddListener(() =>
+            SelectApplicationPage(showsMenu, navigationMotion, targetPage));
 
         if (showsMenu)
         {
@@ -562,7 +791,10 @@ private void LoadLatestOrderToJsonView()
         }
     }
 
-    private void SelectApplicationPage(bool showsMenu, CategoryButtonMotion navigationMotion, AppPage targetPage)
+    private void SelectApplicationPage(
+        bool showsMenu,
+        CategoryButtonMotion navigationMotion,
+        AppPage targetPage)
     {
         currentPage = targetPage;
 
@@ -597,10 +829,15 @@ private void LoadLatestOrderToJsonView()
     private static CanvasGroup GetOrAddCanvasGroup(GameObject target)
     {
         CanvasGroup canvasGroup = target.GetComponent<CanvasGroup>();
-        return canvasGroup != null ? canvasGroup : target.AddComponent<CanvasGroup>();
+
+        return canvasGroup != null
+            ? canvasGroup
+            : target.AddComponent<CanvasGroup>();
     }
 
-    private static void SetCanvasGroupVisible(CanvasGroup canvasGroup, bool isVisible)
+    private static void SetCanvasGroupVisible(
+        CanvasGroup canvasGroup,
+        bool isVisible)
     {
         if (canvasGroup == null)
         {
