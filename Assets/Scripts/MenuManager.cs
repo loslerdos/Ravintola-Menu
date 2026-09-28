@@ -72,6 +72,8 @@ public class MenuManager : MonoBehaviour
 
     private void Start()
     {
+        ProductDatabase.Initialize(categories);
+
         ShowAllItems();
         cartUI.Initialize(ConfirmOrder);
         RefreshCart();
@@ -592,7 +594,7 @@ public class MenuManager : MonoBehaviour
         {
             if (actionButtonText != null)
             {
-                actionButtonText.text = "ARKISTOI";
+                actionButtonText.text = "VALMIS";
             }
 
             actionButton.onClick.AddListener(() =>
