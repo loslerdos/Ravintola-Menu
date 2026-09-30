@@ -72,6 +72,19 @@ public static class ProductDatabase
         }
     }
 
+    public static List<DatabaseProduct> GetProductsByCategory(string category)
+{
+    using (SQLiteConnection connection =
+           new SQLiteConnection(GetDatabasePath()))
+    {
+        return connection.Query<DatabaseProduct>(
+            "SELECT * FROM Products " +
+            "WHERE category = ? " +
+            "ORDER BY id;",
+            category);
+    }
+}
+
     private static int SeedInitialProducts(
         SQLiteConnection connection,
         List<MenuCategory> categories)

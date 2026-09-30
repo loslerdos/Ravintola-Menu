@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-28
+Paivitetty: 2026-09-30
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: vaihe 3.8 on valmis. SQLite-pohjainen Products-tuoterekisteri ja sen read-only Tietokanta-näkymä toimivat. Asiakasmenu käyttää vielä Inspectorissa määritettyä categories-listaa.
+- Nykyinen pääpaino: vaihe 3.9 on valmis. Asiakasmenu lukee tuotteet SQLite-pohjaisesta Products-taulusta.
 
 ## Tehty
 
@@ -97,6 +97,10 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Aloitusdata muodostetaan nykyisestä Inspectorissa olevasta `MenuManager.categories`-listasta. Asiakasmenua ei vielä ladata SQLite-tietokannasta.
 - `DatabasePage` on pysyvä scene-käyttöliittymä. `TIETOKANTA`-navigaatiopainike avaa sen, ja `PÄIVITÄ` hakee Products-taulun tuotteet uudelleen.
 - Tietokantatuotteet näytetään read-only-listana `DatabaseProductRowTemplate`-pohjasta. Lista järjestetään `id`-kentän mukaan, jotta se vastaa alkuperäisen menun järjestystä.
+- Vaihe 3.9 on valmis: `MenuManager.ShowAllItems()` hakee tuotteet `ProductDatabase.GetAllProducts()`-metodilla.
+- `MenuManager.ShowCategory()` käyttää parametrisoitua kategoriakyselyä ja muuntaa `DatabaseProduct`-rivit nykyisiksi `MenuItem`-olioiksi.
+- Tuotekortit, `AddToCart` ja ostoskori säilyvät ennallaan, vaikka tuotetiedot tulevat nyt SQLite Products -taulusta.
+- Ensimmäisen tuotteen lisääminen avaa ostoskorin automaattisesti.
 
 ## Tehtävänannon vaatimukset
 
@@ -111,10 +115,10 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Suunnittele seuraava tietokantavaihe ennen toteutusta ja tee uusi Git-paluupiste ennen muutoksia.
-2. Luonteva seuraava vaihe on Products-taulun CRUD: tuotteen lisäys, muokkaus ja poisto vahvistuksineen.
-3. Vasta CRUD-vaiheen luotettavan testauksen jälkeen suunnitellaan asiakasmenun datalähteen siirtäminen Inspector-listasta SQLiteen.
-4. Pidä asiakasmenu, ostoskori, JSON-tilaukset ja keittiötoiminnot ennallaan, kunnes uusi SQLite-datalähde on erikseen toteutettu ja testattu.
+1. Tee uusi Git-paluupiste ennen seuraavaa tietokantamuutosta.
+2. Suunnittele ja toteuta Products-taulun CRUD: tuotteen lisäys, muokkaus ja poisto vahvistuksineen.
+3. Näytä CRUD-muokkausnäkymässä kaikki tuotteen kentät: id, nimi, kuvaus, lisähuomautus, kategoria ja hinta.
+4. Pidä asiakasmenu, ostoskori, JSON-tilaukset ja keittiötoiminnot ennallaan CRUD-vaiheen ajan.
 
 ## Keskeneräiset asiat ja ongelmat
 
@@ -123,7 +127,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - JSON-näkymän lopullinen layout ja vieritys voidaan vielä viimeistellä eripituisilla tilauksilla.
 - Ohje-välilehti on edelleen placeholder.
 - Products-taulu on tässä vaiheessa read-only käyttöliittymässä. Tuotteiden lisäys, muokkaus ja poisto eivät ole vielä käytössä.
-- Asiakasmenu käyttää edelleen Inspectorin `categories`-listaa. SQLite toimii toistaiseksi erillisenä tuoterekisterinä.
+- Kategoriapainikkeiden ja tietokannan kategorianimien täytyy pysyä yhdenmukaisina uusien CRUD-tuotteiden kanssa.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -140,5 +144,6 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 - Vaihe 3.7 viimeisteltiin ja validoitiin: arkiston poisto vahvistusikkunalla, Inspectorista säädettävät keittiörivien värit sekä toimiva vieritys ja layout.
 - Vaihe 3.8 toteutettiin ja validoitiin: SQLite-net, Products-taulu, kertaluonteinen aloitusdata, `DatabasePage`, Products-lista ja `PÄIVITÄ`-toiminto.
+- Vaihe 3.9 toteutettiin ja validoitiin: asiakasmenu käyttää SQLite Products -taulua, kategoriat toimivat ja ensimmäinen tuotelisäys avaa ostoskorin.
 - Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.
-- Seuraava aloitus: keskustele ja suunnittele Products-CRUD-vaihe ennen koodin tai scenen muuttamista.
+- Seuraava aloitus: tee uusi Git-paluupiste ja suunnittele Products CRUD -scene ennen koodimuutoksia.

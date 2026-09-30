@@ -95,33 +95,88 @@ public class MenuManager : MonoBehaviour
     }
 
     public void ShowAllItems()
+{
+    ClearCards();
+
+    try
     {
-        ClearCards();
+        CreateCardsFromDatabase(ProductDatabase.GetAllProducts());
+    }
+    catch (System.Exception exception)
+    {
+        Debug.LogError("Tuotteita ei voitu ladata tietokannasta: " + exception.Message);
 
         foreach (MenuCategory category in categories)
         {
             CreateCards(category.menuItems);
         }
-
-        ScrollToTop();
     }
+
+    ScrollToTop();
+}
 
     public void ShowCategory(string categoryName)
     {
         ClearCards();
 
-        MenuCategory category = categories.Find(item => item.categoryName == categoryName);
-        if (category != null)
+        MenuCategory category =
+            categories.Find(item => item.categoryName == categoryName);
+
+        if (category == null)
         {
-            CreateCards(category.menuItems);
             ScrollToTop();
+            return;
         }
+
+        string databaseCategory = category.menuItems
+            .Find(item => !string.IsNullOrWhiteSpace(item.category))
+            ?.category;
+
+        if (string.IsNullOrWhiteSpace(databaseCategory))
+        {
+            databaseCategory = categoryName;
+        }
+
+        try
+        {
+            List<DatabaseProduct> products =
+                ProductDatabase.GetProductsByCategory(databaseCategory);
+
+            CreateCardsFromDatabase(products);
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError(
+                "Kategorian tuotteita ei voitu ladata: "
+                + exception.Message);
+        }
+
+        ScrollToTop();
     }
 
     private void CreateCards(List<MenuItem> menuItems)
     {
         foreach (MenuItem menuItem in menuItems)
         {
+            MenuItemDisplay card = Instantiate(menuItemCardPrefab, menuContent);
+            card.Display(menuItem, AddToCart);
+        }
+    }
+
+    private void CreateCardsFromDatabase(List<DatabaseProduct> products)
+    {
+        foreach (DatabaseProduct product in products)
+        {
+            MenuItem menuItem = new MenuItem
+            {
+                id = product.id,
+                productName = product.productName,
+                description = product.description,
+                specialNote = product.specialNote,
+                category = product.category,
+                price = product.price
+            };
+
             MenuItemDisplay card = Instantiate(menuItemCardPrefab, menuContent);
             card.Display(menuItem, AddToCart);
         }
@@ -143,6 +198,13 @@ public class MenuManager : MonoBehaviour
         }
 
         RefreshCart();
+
+        
+
+        if (!cartUI.IsCartOpen)
+        {
+            cartUI.OpenCart();
+        }
     }
 
     public void ChangeCartItemQuantity(CartItem cartItem, int change)
