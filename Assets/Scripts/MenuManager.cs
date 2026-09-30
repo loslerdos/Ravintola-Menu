@@ -36,6 +36,20 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private TMP_Text databaseEmptyStateText;
     [SerializeField] private Button databaseRefreshButton;
     [SerializeField] private GameObject databaseProductRowTemplate;
+    [SerializeField] private GameObject databaseProductEditorPanel;
+    [SerializeField] private TMP_InputField databaseProductIdInput;
+    [SerializeField] private TMP_InputField databaseProductNameInput;
+    [SerializeField] private TMP_InputField databaseProductDescriptionInput;
+    [SerializeField] private TMP_InputField databaseProductSpecialNoteInput;
+    [SerializeField] private TMP_Dropdown databaseProductCategoryDropdown;
+    [SerializeField] private TMP_InputField databaseProductPriceInput;
+    [SerializeField] private TMP_Text databaseProductEditorStatusText;
+    [SerializeField] private Button databaseNewProductButton;
+    [SerializeField] private Button databaseSaveProductButton;
+    [SerializeField] private Button databaseCancelProductButton;
+    [SerializeField] private GameObject databaseDeleteConfirmPanel;
+    [SerializeField] private Button databaseDeleteConfirmButton;
+    [SerializeField] private Button databaseDeleteCancelButton;
 
     [Header("Keittiön poistovahvistus")]
     [SerializeField] private GameObject kitchenDeleteConfirmPanel;
@@ -61,6 +75,8 @@ public class MenuManager : MonoBehaviour
     private string pendingArchivedOrderPath;
     private ScrollRect databaseProductsScrollView;
     private bool databaseViewInitialized;
+    private DatabaseProduct editingDatabaseProduct;
+    private int pendingDatabaseProductId;
 
     private enum AppPage
     {
@@ -600,7 +616,232 @@ public class MenuManager : MonoBehaviour
         databaseRefreshButton.onClick.RemoveAllListeners();
         databaseRefreshButton.onClick.AddListener(RefreshDatabaseProducts);
 
+        databaseProductEditorPanel ??=
+            FindSceneObject("DatabaseProductEditorPanel")?.gameObject;
+        databaseProductIdInput ??=
+            FindSceneObject("DatabaseProductIdInput")?.GetComponent<TMP_InputField>();
+        databaseProductNameInput ??=
+            FindSceneObject("DatabaseProductNameInput")?.GetComponent<TMP_InputField>();
+        databaseProductDescriptionInput ??=
+            FindSceneObject("DatabaseProductDescriptionInput")?.GetComponent<TMP_InputField>();
+        databaseProductSpecialNoteInput ??=
+            FindSceneObject("DatabaseProductSpecialNoteInput")?.GetComponent<TMP_InputField>();
+        databaseProductCategoryDropdown ??=
+            FindSceneObject("DatabaseProductCategoryDropdown")?.GetComponent<TMP_Dropdown>();
+        databaseProductPriceInput ??=
+            FindSceneObject("DatabaseProductPriceInput")?.GetComponent<TMP_InputField>();
+        databaseProductEditorStatusText ??=
+            FindSceneObject("DatabaseProductEditorStatusText")?.GetComponent<TMP_Text>();
+        databaseNewProductButton ??=
+            FindSceneObject("DatabaseNewProductButton")?.GetComponent<Button>();
+        databaseSaveProductButton ??=
+            FindSceneObject("DatabaseSaveProductButton")?.GetComponent<Button>();
+        databaseCancelProductButton ??=
+            FindSceneObject("DatabaseCancelProductButton")?.GetComponent<Button>();
+        databaseDeleteConfirmPanel ??=
+            FindSceneObject("DatabaseProductDeleteConfirmPanel")?.gameObject;
+        databaseDeleteConfirmButton ??=
+            FindSceneObject("DatabaseProductDeleteConfirmButton")?.GetComponent<Button>();
+        databaseDeleteCancelButton ??=
+            FindSceneObject("DatabaseProductDeleteCancelButton")?.GetComponent<Button>();
+
+        InitializeDatabaseProductEditor();
+
+        if (databaseDeleteConfirmPanel != null &&
+            databaseDeleteConfirmButton != null &&
+            databaseDeleteCancelButton != null)
+        {
+            databaseDeleteConfirmButton.onClick.RemoveAllListeners();
+            databaseDeleteCancelButton.onClick.RemoveAllListeners();
+            databaseDeleteConfirmButton.onClick.AddListener(ConfirmDatabaseProductDeletion);
+            databaseDeleteCancelButton.onClick.AddListener(CancelDatabaseProductDeletion);
+            databaseDeleteConfirmPanel.SetActive(false);
+        }
+
         databaseViewInitialized = true;
+    }
+
+    private void InitializeDatabaseProductEditor()
+    {
+        if (databaseProductEditorPanel == null ||
+            databaseProductIdInput == null ||
+            databaseProductNameInput == null ||
+            databaseProductDescriptionInput == null ||
+            databaseProductSpecialNoteInput == null ||
+            databaseProductCategoryDropdown == null ||
+            databaseProductPriceInput == null ||
+            databaseNewProductButton == null ||
+            databaseSaveProductButton == null ||
+            databaseCancelProductButton == null)
+        {
+            Debug.LogWarning(
+                "Tuotteen CRUD-lomakkeen scene-viittauksia puuttuu. " +
+                "Lisää DatabaseProductEditorPanel ja sen kentät Hierarchyyn.");
+            return;
+        }
+
+        databaseNewProductButton.onClick.RemoveAllListeners();
+        databaseSaveProductButton.onClick.RemoveAllListeners();
+        databaseCancelProductButton.onClick.RemoveAllListeners();
+
+        databaseNewProductButton.onClick.AddListener(BeginNewDatabaseProduct);
+        databaseSaveProductButton.onClick.AddListener(SaveDatabaseProductFromEditor);
+        databaseCancelProductButton.onClick.AddListener(CancelDatabaseProductEdit);
+
+        databaseProductEditorPanel.SetActive(false);
+        databaseProductCategoryDropdown.ClearOptions();
+        databaseProductCategoryDropdown.AddOptions(new List<string>
+        {
+            "Alkuruoka",
+            "Pääruoka",
+            "Jälkiruoka",
+            "Juoma"
+        });
+    }
+
+    private void BeginNewDatabaseProduct()
+    {
+        editingDatabaseProduct = null;
+        databaseProductEditorPanel.SetActive(true);
+        databaseProductIdInput.text = string.Empty;
+        databaseProductNameInput.text = string.Empty;
+        databaseProductDescriptionInput.text = string.Empty;
+        databaseProductSpecialNoteInput.text = string.Empty;
+        databaseProductCategoryDropdown.value = 0;
+        databaseProductPriceInput.text = "0";
+        SetDatabaseProductEditorStatus(string.Empty);
+    }
+
+    private void BeginEditDatabaseProduct(DatabaseProduct product)
+    {
+        if (databaseProductEditorPanel == null)
+        {
+            return;
+        }
+
+        editingDatabaseProduct = product;
+        databaseProductEditorPanel.SetActive(true);
+        databaseProductIdInput.text = product.id.ToString();
+        databaseProductNameInput.text = product.productName;
+        databaseProductDescriptionInput.text = product.description;
+        databaseProductSpecialNoteInput.text = product.specialNote;
+        databaseProductCategoryDropdown.value =
+            databaseProductCategoryDropdown.options.FindIndex(
+                option => option.text == product.category);
+        databaseProductPriceInput.text = product.price.ToString(
+            "0.00",
+            System.Globalization.CultureInfo.InvariantCulture);
+        SetDatabaseProductEditorStatus(string.Empty);
+    }
+
+    private void SaveDatabaseProductFromEditor()
+    {
+        string category = databaseProductCategoryDropdown.options[
+            databaseProductCategoryDropdown.value].text;
+        int id;
+
+        if (editingDatabaseProduct == null)
+        {
+            id = ProductDatabase.GetNextProductId(category);
+
+            if (id == 0)
+            {
+                SetDatabaseProductEditorStatus(
+                    "Kategoria on virheellinen tai sen ID-alue on täynnä.");
+                return;
+            }
+        }
+        else if (!int.TryParse(databaseProductIdInput.text, out id))
+        {
+            SetDatabaseProductEditorStatus("ID ei ole kelvollinen.");
+            return;
+        }
+
+        if (!float.TryParse(
+                databaseProductPriceInput.text,
+                System.Globalization.NumberStyles.Float,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out float price) ||
+            price < 0f)
+        {
+            SetDatabaseProductEditorStatus("Hinta ei ole kelvollinen.");
+            return;
+        }
+
+        DatabaseProduct product = new DatabaseProduct
+        {
+            id = id,
+            productName = databaseProductNameInput.text.Trim(),
+            description = databaseProductDescriptionInput.text.Trim(),
+            specialNote = databaseProductSpecialNoteInput.text.Trim(),
+            category = category,
+            price = price
+        };
+
+        bool saved = editingDatabaseProduct == null
+            ? ProductDatabase.InsertProduct(product)
+            : ProductDatabase.UpdateProduct(product);
+
+        if (!saved)
+        {
+            SetDatabaseProductEditorStatus(
+                "Tuotetta ei voitu tallentaa. Tarkista nimi, kategoria ja ID-alue.");
+            return;
+        }
+
+        databaseProductEditorPanel.SetActive(false);
+        RefreshDatabaseProducts();
+        ShowAllItems();
+    }
+
+    private void CancelDatabaseProductEdit()
+    {
+        editingDatabaseProduct = null;
+        databaseProductEditorPanel.SetActive(false);
+        SetDatabaseProductEditorStatus(string.Empty);
+    }
+
+    private void RequestDatabaseProductDeletion(int productId)
+    {
+        if (databaseDeleteConfirmPanel == null)
+        {
+            return;
+        }
+
+        pendingDatabaseProductId = productId;
+        databaseDeleteConfirmPanel.SetActive(true);
+    }
+
+    private void CancelDatabaseProductDeletion()
+    {
+        pendingDatabaseProductId = 0;
+
+        if (databaseDeleteConfirmPanel != null)
+        {
+            databaseDeleteConfirmPanel.SetActive(false);
+        }
+    }
+
+    private void ConfirmDatabaseProductDeletion()
+    {
+        int productId = pendingDatabaseProductId;
+        CancelDatabaseProductDeletion();
+
+        if (productId == 0 || !ProductDatabase.DeleteProduct(productId))
+        {
+            return;
+        }
+
+        RefreshDatabaseProducts();
+        ShowAllItems();
+    }
+
+    private void SetDatabaseProductEditorStatus(string message)
+    {
+        if (databaseProductEditorStatusText != null)
+        {
+            databaseProductEditorStatusText.text = message;
+        }
     }
 
     private void RefreshDatabaseProducts()
@@ -675,6 +916,32 @@ public class MenuManager : MonoBehaviour
                 + " | "
                 + product.price.ToString("0.00")
                 + " €";
+        }
+
+        Button editButton = row.transform
+            .Find("DatabaseProductEditButton")
+            ?.GetComponent<Button>();
+
+        if (editButton != null)
+        {
+            editButton.onClick.RemoveAllListeners();
+            editButton.onClick.AddListener(() =>
+            {
+                BeginEditDatabaseProduct(product);
+            });
+        }
+
+        Button deleteButton = row.transform
+            .Find("DatabaseProductDeleteButton")
+            ?.GetComponent<Button>();
+
+        if (deleteButton != null)
+        {
+            deleteButton.onClick.RemoveAllListeners();
+            deleteButton.onClick.AddListener(() =>
+            {
+                RequestDatabaseProductDeletion(product.id);
+            });
         }
     }
 
