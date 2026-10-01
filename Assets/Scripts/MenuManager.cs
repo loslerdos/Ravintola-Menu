@@ -953,7 +953,8 @@ public class MenuManager : MonoBehaviour
         {
             Transform child = databaseProductsContent.GetChild(index);
 
-            if (child.gameObject != databaseProductRowTemplate)
+            if (child.gameObject != databaseProductRowTemplate &&
+                child.name != "DatabaseEmptyStateText")
             {
                 LayoutElement layoutElement = child.GetComponent<LayoutElement>();
 

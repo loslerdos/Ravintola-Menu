@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-09-30
+Paivitetty: 2026-10-01
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: Products CRUD on aloitettu. Tietokantakerroksen kirjoitusoperaatiot ja kategoriakohtaiset ID-alueet ovat valmiit; DatabasePage-lomake on vielä kytkettävä scenessä.
+- Nykyinen pääpaino: Products CRUD on toteutettu koodi- ja scene-tasolla. Lisäys, muokkaus ja poistovahvistus odottavat vielä kokonaisvaltaista Play-tilan testausta. Seuraava ominaisuus on tuotteiden haku nimellä ja kategorian rajaus.
 
 ## Tehty
 
@@ -102,8 +102,9 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Tuotekortit, `AddToCart` ja ostoskori säilyvät ennallaan, vaikka tuotetiedot tulevat nyt SQLite Products -taulusta.
 - Ensimmäisen tuotteen lisääminen avaa ostoskorin automaattisesti.
 - CRUD:n kategoriakohtaiset ID-alueet ovat `100–199` Alkuruoille, `200–299` Pääruoille, `300–399` Jälkiruoille ja `400–499` Juomille.
-- `ProductDatabase` sisältää nyt seuraavan vapaan ID:n haun sekä tuotteiden lisäys-, päivitys- ja poistotoiminnot.
-- `MenuManager` sisältää Inspector-kytkennät uuden tuotteen lomakkeelle, rivikohtaiselle muokkaukselle ja poistovahvistukselle.
+- `ProductDatabase` sisältää tuotteiden lisäys-, päivitys- ja poistotoiminnot sekä kategoriakohtaisen ID-generaattorin. ID haetaan alueen suurimmasta käytössä olevasta ID:stä `ExecuteScalar<int>()`-kutsulla.
+- `MenuManager` sisältää uuden tuotteen lomakkeen, rivikohtaisen muokkauksen ja poistovahvistuksen scene-kytkennät.
+- Käännös `dotnet build Assembly-CSharp.csproj --no-restore` onnistuu. ID-generaattorin korjaus on vielä varmistettava Unityn Play-tilassa: jos pääruokien ID:t ovat 201–203, seuraavan pitää olla 204.
 
 ## Tehtävänannon vaatimukset
 
@@ -118,11 +119,11 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Tee uusi Git-paluupiste ennen seuraavaa tietokantamuutosta.
-2. Suunnittele ja toteuta Products-taulun CRUD: tuotteen lisäys, muokkaus ja poisto vahvistuksineen.
-3. Näytä CRUD-muokkausnäkymässä kaikki tuotteen kentät: id, nimi, kuvaus, lisähuomautus, kategoria ja hinta.
-4. Lisää `DatabaseProductRowTemplate`-riville `DatabaseProductEditButton` ja `DatabaseProductDeleteButton`.
-5. Pidä asiakasmenu, ostoskori, JSON-tilaukset ja keittiötoiminnot ennallaan CRUD-vaiheen ajan.
+1. Testaa Unityn Play-tilassa tuotteen lisäys ID:llä, muokkaus, poisto vahvistuksella sekä tietokantalistan toistuva päivitys.
+2. Tee Git-paluupiste ennen seuraavan ominaisuuden toteutusta.
+3. Lisää tuotteiden haku nimellä ja mahdollisuus rajata hakutuloksia kategorialla.
+4. Suunnittele myöhemmäksi arkistoitujen tilausten myyntiyhteenveto: tilausmäärä, kokonaissumma ja tuotteittaiset määrät/summat.
+5. Pidä asiakasmenu, ostoskori, JSON-tilaukset ja keittiötoiminnot ennallaan näiden muutosten aikana.
 
 ## Keskeneräiset asiat ja ongelmat
 
@@ -130,9 +131,9 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
 - JSON-näkymän lopullinen layout ja vieritys voidaan vielä viimeistellä eripituisilla tilauksilla.
 - Ohje-välilehti on edelleen placeholder.
-- Products-taulu on tässä vaiheessa read-only käyttöliittymässä. Tuotteiden lisäys, muokkaus ja poisto eivät ole vielä käytössä.
 - Kategoriapainikkeiden ja tietokannan kategorianimien täytyy pysyä yhdenmukaisina uusien CRUD-tuotteiden kanssa.
-- `DatabaseProductEditorPanel`-lomakkeen scene-objektit ja Inspector-viittaukset puuttuvat vielä.
+- CRUD-toiminnot on vielä testattava kokonaan Unityn Play-tilassa, erityisesti kategorian ID-alue ja tietokantalistan päivitys.
+- Tuotehakua tai arkistomyynnin yhteenvetoa ei ole vielä toteutettu.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -150,5 +151,6 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Vaihe 3.7 viimeisteltiin ja validoitiin: arkiston poisto vahvistusikkunalla, Inspectorista säädettävät keittiörivien värit sekä toimiva vieritys ja layout.
 - Vaihe 3.8 toteutettiin ja validoitiin: SQLite-net, Products-taulu, kertaluonteinen aloitusdata, `DatabasePage`, Products-lista ja `PÄIVITÄ`-toiminto.
 - Vaihe 3.9 toteutettiin ja validoitiin: asiakasmenu käyttää SQLite Products -taulua, kategoriat toimivat ja ensimmäinen tuotelisäys avaa ostoskorin.
+- Products CRUD:n tietokantaoperaatiot ja DatabasePage-scene on rakennettu. ID-generaattori korjattiin käyttämään `ExecuteScalar<int>()`; käännös onnistui.
+- Seuraava aloitus: varmista CRUD:n lisäys Unityssa (pääruoat 201–203 -> 204), testaa muokkaus/poisto ja lisää sen jälkeen nimihaku kategoriarajauksella.
 - Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.
-- Seuraava aloitus: tee uusi Git-paluupiste ja suunnittele Products CRUD -scene ennen koodimuutoksia.

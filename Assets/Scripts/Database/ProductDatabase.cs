@@ -94,50 +94,65 @@ public static class ProductDatabase
     }
 
     public static int GetNextProductId(string category)
+{
+    if (!TryGetCategoryIdRange(
+            category,
+            out int rangeStart,
+            out int rangeEnd))
     {
-        if (!TryGetCategoryIdRange(
-                category,
-                out int rangeStart,
-                out int rangeEnd))
-        {
-            return 0;
-        }
-
-        using (SQLiteConnection connection =
-               new SQLiteConnection(GetDatabasePath()))
-        {
-            List<int> usedIds = connection.Query<int>(
-                "SELECT id FROM Products " +
-                "WHERE category = ? AND id BETWEEN ? AND ? " +
-                "ORDER BY id;",
-                category,
-                rangeStart,
-                rangeEnd);
-
-            for (int id = rangeStart; id <= rangeEnd; id++)
-            {
-                if (!usedIds.Contains(id))
-                {
-                    return id;
-                }
-            }
-        }
-
         return 0;
     }
 
+    using (SQLiteConnection connection =
+           new SQLiteConnection(GetDatabasePath()))
+    {
+        int highestId = connection.ExecuteScalar<int>(
+            "SELECT COALESCE(MAX(id), ?) FROM Products " +
+            "WHERE id BETWEEN ? AND ?;",
+            rangeStart - 1,
+            rangeStart,
+            rangeEnd);
+
+        int nextId = highestId + 1;
+
+        return nextId <= rangeEnd ? nextId : 0;
+    }
+}
+
     public static bool InsertProduct(DatabaseProduct product)
     {
-        if (!IsProductValid(product) ||
-            !IsIdInCategoryRange(product.id, product.category))
+        if (product == null)
         {
+            Debug.LogError("TUOTETTA EI VOITU LISÄTÄ: tuotetieto puuttuu.");
+            return false;
+        }
+
+        if (!IsProductValid(product))
+        {
+            Debug.LogError(
+                "TUOTETTA EI VOITU LISÄTÄ: virheellinen tuotetieto. " +
+                $"id={product.id}, nimi='{product.productName}', " +
+                $"kategoria='{product.category}', hinta={product.price}");
+            return false;
+        }
+
+        if (!IsIdInCategoryRange(product.id, product.category))
+        {
+            Debug.LogError(
+                "TUOTETTA EI VOITU LISÄTÄ: ID ei kuulu kategorian alueeseen. " +
+                $"id={product.id}, kategoria='{product.category}'");
             return false;
         }
 
         using (SQLiteConnection connection =
                new SQLiteConnection(GetDatabasePath()))
         {
-            return connection.Insert(product) > 0;
+            int insertedRows = connection.Insert(product);
+            Debug.Log(
+                "PRODUCTS-LISÄYS: " +
+                $"id={product.id}, kategoria='{product.category}', " +
+                $"lisättyjä rivejä={insertedRows}");
+            return insertedRows > 0;
         }
     }
 
