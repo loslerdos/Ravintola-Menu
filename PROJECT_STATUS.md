@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-10-01
+Paivitetty: 2026-10-19
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: Products CRUD on toteutettu koodi- ja scene-tasolla. Lisäys, muokkaus ja poistovahvistus odottavat vielä kokonaisvaltaista Play-tilan testausta. Seuraava ominaisuus on tuotteiden haku nimellä ja kategorian rajaus.
+- Nykyinen pääpaino: vaihe 3.9 on validoitu Play-tilassa. Seuraava, vasta suunniteltu vaihe on tuotteiden nimihaku ja kategoriarajaus Ruokalista- ja Tietokanta-näkymiin.
 
 ## Tehty
 
@@ -104,7 +104,9 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - CRUD:n kategoriakohtaiset ID-alueet ovat `100–199` Alkuruoille, `200–299` Pääruoille, `300–399` Jälkiruoille ja `400–499` Juomille.
 - `ProductDatabase` sisältää tuotteiden lisäys-, päivitys- ja poistotoiminnot sekä kategoriakohtaisen ID-generaattorin. ID haetaan alueen suurimmasta käytössä olevasta ID:stä `ExecuteScalar<int>()`-kutsulla.
 - `MenuManager` sisältää uuden tuotteen lomakkeen, rivikohtaisen muokkauksen ja poistovahvistuksen scene-kytkennät.
-- Käännös `dotnet build Assembly-CSharp.csproj --no-restore` onnistuu. ID-generaattorin korjaus on vielä varmistettava Unityn Play-tilassa: jos pääruokien ID:t ovat 201–203, seuraavan pitää olla 204.
+- Käännös `dotnet build Assembly-CSharp.csproj --no-restore` onnistuu.
+- Vaihe 3.9 on validoitu Unityn Play-tilassa: tuotteen lisäys, kategorian mukainen ID-generaattori, muokkaus, poistovahvistus, tietokantalistan päivitys ja asiakasmenun päivittyminen toimivat.
+- Nimihaku- ja kategoriarajausvaiheen kohteiksi on sovittu molemmat näkymät. Hakua varten ei ole vielä scene-objekteja eikä koodimuutoksia.
 
 ## Tehtävänannon vaatimukset
 
@@ -119,11 +121,12 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Testaa Unityn Play-tilassa tuotteen lisäys ID:llä, muokkaus, poisto vahvistuksella sekä tietokantalistan toistuva päivitys.
-2. Tee Git-paluupiste ennen seuraavan ominaisuuden toteutusta.
-3. Lisää tuotteiden haku nimellä ja mahdollisuus rajata hakutuloksia kategorialla.
-4. Suunnittele myöhemmäksi arkistoitujen tilausten myyntiyhteenveto: tilausmäärä, kokonaissumma ja tuotteittaiset määrät/summat.
-5. Pidä asiakasmenu, ostoskori, JSON-tilaukset ja keittiötoiminnot ennallaan näiden muutosten aikana.
+1. Tee Git-paluupiste validoidusta vaiheesta 3.9 ennen hakuvaiheen toteutusta.
+2. Viimeistele sceneen aloitettu haku-UI: `MenuSearchPanel` tulee Canvasin lapseksi, ja DatabasePagen hakualueen mittasuhteet sekä tuoteluettelon sijainti tarkistetaan.
+3. Opettele ja viimeistele `DatabaseCategoryFilterDropdown` Inspectorissa ennen sen kytkemistä koodiin.
+4. Tee yksi parametrisoitu SQLite-haku, joka rajaa nimella ja valinnaisella kategorialla.
+5. Kytke Ruokalistan haku nykyisiin kategoriapainikkeisiin ja Tietokannan haku omaan pudotusvalikkoonsa.
+6. Suunnittele myöhemmäksi arkistoitujen tilausten myyntiyhteenveto: tilausmäärä, kokonaissumma ja tuotteittaiset määrät/summat.
 
 ## Keskeneräiset asiat ja ongelmat
 
@@ -132,8 +135,10 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - JSON-näkymän lopullinen layout ja vieritys voidaan vielä viimeistellä eripituisilla tilauksilla.
 - Ohje-välilehti on edelleen placeholder.
 - Kategoriapainikkeiden ja tietokannan kategorianimien täytyy pysyä yhdenmukaisina uusien CRUD-tuotteiden kanssa.
-- CRUD-toiminnot on vielä testattava kokonaan Unityn Play-tilassa, erityisesti kategorian ID-alue ja tietokantalistan päivitys.
 - Tuotehakua tai arkistomyynnin yhteenvetoa ei ole vielä toteutettu.
+- Nimihaku- ja kategoriarajausvaiheen haku-UI on aloitettu scenessä, mutta toimintoja ei ole vielä kytketty koodiin.
+- `MenuSearchPanel`, `MenuSearchInput`, `DatabaseSearchPanel`, `DatabaseSearchInput` ja `DatabaseCategoryFilterDropdown` ovat scenessä. MenuSearchPanelin vanhempi ja tietokantahakualueen sijoittelu viimeistellään seuraavalla kerralla.
+- DatabaseCategoryFilterDropdownin vaihtoehdot ovat Kaikki Kategoriat, Alkuruoka, Pääruoka, Jälkiruoka ja Juoma. Dropdownin Inspector-asetukset ja toiminta tarvitsevat seuraavalla kerralla ohjausta.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -150,7 +155,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 - Vaihe 3.7 viimeisteltiin ja validoitiin: arkiston poisto vahvistusikkunalla, Inspectorista säädettävät keittiörivien värit sekä toimiva vieritys ja layout.
 - Vaihe 3.8 toteutettiin ja validoitiin: SQLite-net, Products-taulu, kertaluonteinen aloitusdata, `DatabasePage`, Products-lista ja `PÄIVITÄ`-toiminto.
-- Vaihe 3.9 toteutettiin ja validoitiin: asiakasmenu käyttää SQLite Products -taulua, kategoriat toimivat ja ensimmäinen tuotelisäys avaa ostoskorin.
-- Products CRUD:n tietokantaoperaatiot ja DatabasePage-scene on rakennettu. ID-generaattori korjattiin käyttämään `ExecuteScalar<int>()`; käännös onnistui.
-- Seuraava aloitus: varmista CRUD:n lisäys Unityssa (pääruoat 201–203 -> 204), testaa muokkaus/poisto ja lisää sen jälkeen nimihaku kategoriarajauksella.
+- Vaihe 3.9 on toteutettu ja validoitu: asiakasmenu käyttää SQLite Products -taulua, kategoriat toimivat, ensimmäinen tuotelisäys avaa ostoskorin, ja Products CRUD toimii Play-tilassa.
+- Nimihaku ja kategoriarajaus sovittiin toteutettavaksi seka Ruokalistaan etta Tietokanta-nakymään. Haku-UI-objektit luotiin sceneen, mutta niiden sijoittelu ja dropdown keskeytettiin ennen koodikytkentöjä.
+- Seuraava aloitus: viimeistele ensin MenuSearchPanelin vanhempi, tietokantahakualueen sijoittelu ja DatabaseCategoryFilterDropdown Inspectorissa. Kytke ne vasta sitten MenuManageriin ja ProductDatabaseen.
 - Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.
