@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-10-19
+Paivitetty: 2026-10-22
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: vaihe 3.9 on validoitu Play-tilassa. Seuraava, vasta suunniteltu vaihe on tuotteiden nimihaku ja kategoriarajaus Ruokalista- ja Tietokanta-näkymiin.
+- Nykyinen pääpaino: myyntiyhteenvedon ID-törmäyskorjaus on käyttäjän Play-tilassa kokeilema: Makkaraperunat näkyy arkistomyynnissä, ja arkistoidun tilauksen poistaminen poistaa sen myynnistä odotetusti. Koko työkulun käyttöohje on kesken.
 
 ## Tehty
 
@@ -106,7 +106,15 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - `MenuManager` sisältää uuden tuotteen lomakkeen, rivikohtaisen muokkauksen ja poistovahvistuksen scene-kytkennät.
 - Käännös `dotnet build Assembly-CSharp.csproj --no-restore` onnistuu.
 - Vaihe 3.9 on validoitu Unityn Play-tilassa: tuotteen lisäys, kategorian mukainen ID-generaattori, muokkaus, poistovahvistus, tietokantalistan päivitys ja asiakasmenun päivittyminen toimivat.
-- Nimihaku- ja kategoriarajausvaiheen kohteiksi on sovittu molemmat näkymät. Hakua varten ei ole vielä scene-objekteja eikä koodimuutoksia.
+- Hakukäyttöliittymä on scene-pohjainen: `MenuSearchInput` suodattaa Ruokalistan aktiivisen kategorian tuotteita ja `DatabaseSearchInput` hakee tietokantalistaa.
+- `DatabaseCategoryFilterDropdown` rajaa tietokantahaun kategoriaan; `Kaikki Kategoriat` näyttää kaikki tuotteet.
+- `ProductDatabase.SearchProducts()` käyttää parametrisoitua ID-aluekyselyä ja suodattaa nimen kirjainkoosta riippumatta.
+- `MenuManager` kytkee hakukenttien ja kategoriavalinnan muutokset listojen päivitykseen. Ruokalistan hakupaneeli näkyy vain Ruokalista-sivulla.
+- C#-projekti kääntyy hakukytkennän jälkeen, ja käyttäjä on vahvistanut haun toimivan Play-tilassa.
+- Arkistotilausten myyntiyhteenveto kokoaa arkisto-JSONien snapshot-tiedoista tilausten määrän, myynnin kokonaissumman sekä tuotteittaiset kappalemäärät ja summat. Tuotteet ryhmitellään ID:n, nimen ja kategorian perusteella, jotta eri historialliset tuotteet eivät yhdisty ID:n uudelleenkäytön vuoksi.
+- `KitchenSalesSummaryButton` on lisätty Tilaukset-näkymään ja kytketty `MenuManager`iin. Yhteenveto käyttää keittiön nykyistä vieritettävää tilauslistaa.
+- `ProductDatabase.GetNextProductId()` huomioi myös aktiivisten ja arkistoitujen tilausten snapshotit, jotta poistetun tuotteen ID:tä ei käytetä uudelleen.
+- Käyttäjä vahvisti Play-tilassa, että Makkaraperunat näkyy myyntiyhteenvedossa ja arkistoidun tilauksen poistaminen poistaa sen yhteenvedosta odotetusti.
 
 ## Tehtävänannon vaatimukset
 
@@ -121,24 +129,18 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Tee Git-paluupiste validoidusta vaiheesta 3.9 ennen hakuvaiheen toteutusta.
-2. Viimeistele sceneen aloitettu haku-UI: `MenuSearchPanel` tulee Canvasin lapseksi, ja DatabasePagen hakualueen mittasuhteet sekä tuoteluettelon sijainti tarkistetaan.
-3. Opettele ja viimeistele `DatabaseCategoryFilterDropdown` Inspectorissa ennen sen kytkemistä koodiin.
-4. Tee yksi parametrisoitu SQLite-haku, joka rajaa nimella ja valinnaisella kategorialla.
-5. Kytke Ruokalistan haku nykyisiin kategoriapainikkeisiin ja Tietokannan haku omaan pudotusvalikkoonsa.
-6. Suunnittele myöhemmäksi arkistoitujen tilausten myyntiyhteenveto: tilausmäärä, kokonaissumma ja tuotteittaiset määrät/summat.
+1. Varmista Play-tilassa, että myyntiyhteenveto säilyy ennallaan, kun arkistossa olevan tuotteen tuote poistetaan Products-taulusta.
+2. Varmista, ettei uuden tuotteen ID:tä valita aiemmissa tilaus-snapshotissa käytetyistä ID:istä.
+3. Laadi koko työkulun käyttöohje asiakkaan menusta ja ostoskorista tilausten JSON-tallennukseen, keittiön aktiivisiin ja arkistoituihin tilauksiin, tuotteiden CRUD-toimintoihin ja hakuihin sekä myyntiyhteenvetoon. Päätä ohjeen sijoitus ja toteutusmuoto ennen sen toteuttamista.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
 - JSON-näkymän lopullinen layout ja vieritys voidaan vielä viimeistellä eripituisilla tilauksilla.
-- Ohje-välilehti on edelleen placeholder.
+- Koko työkulun käyttöohje puuttuu. Ohje kattaa asiakkaan menun ja ostoskorin, tilausten tallennuksen, keittiön tilaukset ja arkiston, tuotteiden hallinnan ja haun sekä myyntiyhteenvedon. Ohjeen sijoitus ja toteutusmuoto ovat vielä avoinna; Ohje-välilehti on placeholder.
 - Kategoriapainikkeiden ja tietokannan kategorianimien täytyy pysyä yhdenmukaisina uusien CRUD-tuotteiden kanssa.
-- Tuotehakua tai arkistomyynnin yhteenvetoa ei ole vielä toteutettu.
-- Nimihaku- ja kategoriarajausvaiheen haku-UI on aloitettu scenessä, mutta toimintoja ei ole vielä kytketty koodiin.
-- `MenuSearchPanel`, `MenuSearchInput`, `DatabaseSearchPanel`, `DatabaseSearchInput` ja `DatabaseCategoryFilterDropdown` ovat scenessä. MenuSearchPanelin vanhempi ja tietokantahakualueen sijoittelu viimeistellään seuraavalla kerralla.
-- DatabaseCategoryFilterDropdownin vaihtoehdot ovat Kaikki Kategoriat, Alkuruoka, Pääruoka, Jälkiruoka ja Juoma. Dropdownin Inspector-asetukset ja toiminta tarvitsevat seuraavalla kerralla ohjausta.
+- Products-taulusta poistetun tuotteen arkistosnapshotin säilyminen myyntiyhteenvedossa odottaa vielä erillistä Play-testiä.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -156,6 +158,10 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Vaihe 3.7 viimeisteltiin ja validoitiin: arkiston poisto vahvistusikkunalla, Inspectorista säädettävät keittiörivien värit sekä toimiva vieritys ja layout.
 - Vaihe 3.8 toteutettiin ja validoitiin: SQLite-net, Products-taulu, kertaluonteinen aloitusdata, `DatabasePage`, Products-lista ja `PÄIVITÄ`-toiminto.
 - Vaihe 3.9 on toteutettu ja validoitu: asiakasmenu käyttää SQLite Products -taulua, kategoriat toimivat, ensimmäinen tuotelisäys avaa ostoskorin, ja Products CRUD toimii Play-tilassa.
-- Nimihaku ja kategoriarajaus sovittiin toteutettavaksi seka Ruokalistaan etta Tietokanta-nakymään. Haku-UI-objektit luotiin sceneen, mutta niiden sijoittelu ja dropdown keskeytettiin ennen koodikytkentöjä.
-- Seuraava aloitus: viimeistele ensin MenuSearchPanelin vanhempi, tietokantahakualueen sijoittelu ja DatabaseCategoryFilterDropdown Inspectorissa. Kytke ne vasta sitten MenuManageriin ja ProductDatabaseen.
+- Nimihaku ja kategoriarajaus kytkettiin molempiin näkymiin; `dotnet build Assembly-CSharp.csproj --no-restore` onnistui, ja käyttäjä vahvisti toiminnan Play-tilassa.
+- Vaiheeseen 3.10 lisättiin arkistoitujen tilausten myyntiyhteenveto ja koko työkulun käyttöohje. Ohje kattaa asiakkaan ja henkilökunnan työnkulut; toteutusmuoto jätettiin avoimeksi.
+- Myyntiyhteenvedon ID-törmäys korjattiin: paikallisessa arkistossa ID 204 kuuluu sekä `TestiRuoka`- että `Makkaraperunat`-snapshotille, ja raportti käsittelee ne nyt eri tuotteina. ID-generaattori tarkistaa tilaus-snapshotit.
+- Käyttäjän Play-testin mukaan Makkaraperunat näkyy myyntiyhteenvedossa, ja koko arkistotilauksen poistaminen poistaa myynnin yhteenvedosta odotetusti.
+- `dotnet build Assembly-CSharp.csproj --no-restore` onnistui: 0 virhettä ja 7 editor/framework-varoitusta. Products-taulusta poistamisen vaikutusta arkistoituun myyntiin ei ole vielä Play-testattu.
+- Seuraava aloitus: testaa Products-tuotteen poiston vaikutus säilytettyyn arkistotilauksen snapshotiin; tämän jälkeen aloita koko työkulun käyttöohje.
 - Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.

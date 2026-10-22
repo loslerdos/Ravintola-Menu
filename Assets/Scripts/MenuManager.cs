@@ -28,6 +28,7 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button kitchenActiveButton;
     [SerializeField] private Button kitchenArchiveButton;
     [SerializeField] private Button kitchenRefreshButton;
+    [SerializeField] private Button kitchenSalesSummaryButton;
     [SerializeField] private GameObject kitchenOrderRowTemplate;
 
     [Header("Tietokanta")]
@@ -71,12 +72,18 @@ public class MenuManager : MonoBehaviour
     private CanvasGroup rightPanelCanvasGroup;
     private ScrollRect kitchenOrdersScrollView;
     private bool showingArchivedKitchenOrders;
+    private bool showingKitchenSalesSummary;
     private bool kitchenViewInitialized;
     private string pendingArchivedOrderPath;
     private ScrollRect databaseProductsScrollView;
     private bool databaseViewInitialized;
     private DatabaseProduct editingDatabaseProduct;
     private int pendingDatabaseProductId;
+    private GameObject menuSearchPanel;
+    private TMP_InputField menuSearchInput;
+    private TMP_InputField databaseSearchInput;
+    private TMP_Dropdown databaseCategoryFilterDropdown;
+    private string activeMenuDatabaseCategory;
 
     private enum AppPage
     {
@@ -84,6 +91,15 @@ public class MenuManager : MonoBehaviour
         Json,
         Kitchen,
         Database
+    }
+
+    private sealed class ProductSalesSummary
+    {
+        public int productId;
+        public string productName;
+        public string category;
+        public int quantity;
+        public float total;
     }
 
     private AppPage currentPage = AppPage.Menu;
@@ -111,36 +127,20 @@ public class MenuManager : MonoBehaviour
     }
 
     public void ShowAllItems()
-{
-    ClearCards();
-
-    try
     {
-        CreateCardsFromDatabase(ProductDatabase.GetAllProducts());
+        activeMenuDatabaseCategory = null;
+        RefreshMenuSearchResults();
     }
-    catch (System.Exception exception)
-    {
-        Debug.LogError("Tuotteita ei voitu ladata tietokannasta: " + exception.Message);
-
-        foreach (MenuCategory category in categories)
-        {
-            CreateCards(category.menuItems);
-        }
-    }
-
-    ScrollToTop();
-}
 
     public void ShowCategory(string categoryName)
     {
-        ClearCards();
-
         MenuCategory category =
             categories.Find(item => item.categoryName == categoryName);
 
         if (category == null)
         {
-            ScrollToTop();
+            activeMenuDatabaseCategory = null;
+            RefreshMenuSearchResults();
             return;
         }
 
@@ -153,21 +153,72 @@ public class MenuManager : MonoBehaviour
             databaseCategory = categoryName;
         }
 
+        activeMenuDatabaseCategory = databaseCategory;
+        RefreshMenuSearchResults();
+    }
+
+    private void RefreshMenuSearchResults()
+    {
+        ClearCards();
+
         try
         {
-            List<DatabaseProduct> products =
-                ProductDatabase.GetProductsByCategory(databaseCategory);
-
-            CreateCardsFromDatabase(products);
+            CreateCardsFromDatabase(
+                ProductDatabase.SearchProducts(
+                    menuSearchInput == null ? string.Empty : menuSearchInput.text,
+                    activeMenuDatabaseCategory));
         }
         catch (System.Exception exception)
         {
             Debug.LogError(
-                "Kategorian tuotteita ei voitu ladata: "
+                "Ruokalistan hakutuloksia ei voitu ladata: "
                 + exception.Message);
+
+            CreateFallbackMenuCards();
         }
 
         ScrollToTop();
+    }
+
+    private void CreateFallbackMenuCards()
+    {
+        string searchText = menuSearchInput == null
+            ? string.Empty
+            : menuSearchInput.text.Trim();
+
+        foreach (MenuCategory category in categories)
+        {
+            if (category == null || category.menuItems == null)
+            {
+                continue;
+            }
+
+            string categoryDatabaseName = category.menuItems
+                .Find(item => item != null &&
+                              !string.IsNullOrWhiteSpace(item.category))
+                ?.category;
+
+            if (string.IsNullOrWhiteSpace(categoryDatabaseName))
+            {
+                categoryDatabaseName = category.categoryName;
+            }
+
+            if (!string.IsNullOrWhiteSpace(activeMenuDatabaseCategory) &&
+                categoryDatabaseName != activeMenuDatabaseCategory)
+            {
+                continue;
+            }
+
+            List<MenuItem> matchingItems = category.menuItems.FindAll(item =>
+                item != null &&
+                (string.IsNullOrWhiteSpace(searchText) ||
+                 (!string.IsNullOrEmpty(item.productName) &&
+                  item.productName.IndexOf(
+                      searchText,
+                      System.StringComparison.CurrentCultureIgnoreCase) >= 0)));
+
+            CreateCards(matchingItems);
+        }
     }
 
     private void CreateCards(List<MenuItem> menuItems)
@@ -516,6 +567,7 @@ public class MenuManager : MonoBehaviour
         kitchenActiveButton ??= FindSceneObject("KitchenActiveButton")?.GetComponent<Button>();
         kitchenArchiveButton ??= FindSceneObject("KitchenArchiveButton")?.GetComponent<Button>();
         kitchenRefreshButton ??= FindSceneObject("KitchenRefreshButton")?.GetComponent<Button>();
+        kitchenSalesSummaryButton ??= FindSceneObject("KitchenSalesSummaryButton")?.GetComponent<Button>();
         kitchenOrderRowTemplate ??= FindSceneObject("KitchenTestOrderRow")?.gameObject;
 
         if (kitchenPage == null ||
@@ -540,12 +592,14 @@ public class MenuManager : MonoBehaviour
         kitchenActiveButton.onClick.RemoveAllListeners();
         kitchenArchiveButton.onClick.RemoveAllListeners();
         kitchenRefreshButton.onClick.RemoveAllListeners();
+        kitchenSalesSummaryButton?.onClick.RemoveAllListeners();
         kitchenDeleteConfirmButton.onClick.RemoveAllListeners();
         kitchenDeleteCancelButton.onClick.RemoveAllListeners();
 
         kitchenActiveButton.onClick.AddListener(ShowActiveKitchenOrders);
         kitchenArchiveButton.onClick.AddListener(ShowArchivedKitchenOrders);
         kitchenRefreshButton.onClick.AddListener(RefreshKitchenOrders);
+        kitchenSalesSummaryButton?.onClick.AddListener(ShowKitchenSalesSummary);
         kitchenDeleteConfirmButton.onClick.AddListener(ConfirmArchivedOrderDeletion);
         kitchenDeleteCancelButton.onClick.AddListener(CancelArchivedOrderDeletion);
 
@@ -555,6 +609,11 @@ public class MenuManager : MonoBehaviour
 
     private void InitializeDatabaseView()
     {
+        databaseSearchInput ??=
+            FindSceneObject("DatabaseSearchInput")?.GetComponent<TMP_InputField>();
+        databaseCategoryFilterDropdown ??=
+            FindSceneObject("DatabaseCategoryFilterDropdown")?.GetComponent<TMP_Dropdown>();
+
         if (databasePage == null)
         {
             databasePage = FindSceneObject("DatabasePage")?.gameObject;
@@ -615,6 +674,24 @@ public class MenuManager : MonoBehaviour
 
         databaseRefreshButton.onClick.RemoveAllListeners();
         databaseRefreshButton.onClick.AddListener(RefreshDatabaseProducts);
+
+        if (databaseSearchInput != null)
+        {
+            databaseSearchInput.onValueChanged.RemoveAllListeners();
+            databaseSearchInput.onValueChanged.AddListener(_ =>
+            {
+                RefreshDatabaseProducts();
+            });
+        }
+
+        if (databaseCategoryFilterDropdown != null)
+        {
+            databaseCategoryFilterDropdown.onValueChanged.RemoveAllListeners();
+            databaseCategoryFilterDropdown.onValueChanged.AddListener(_ =>
+            {
+                RefreshDatabaseProducts();
+            });
+        }
 
         databaseProductEditorPanel ??=
             FindSceneObject("DatabaseProductEditorPanel")?.gameObject;
@@ -860,7 +937,19 @@ public class MenuManager : MonoBehaviour
 
         try
         {
-            products = ProductDatabase.GetAllProducts();
+            string selectedCategory = databaseCategoryFilterDropdown != null &&
+                                      databaseCategoryFilterDropdown.options.Count > 0
+                ? databaseCategoryFilterDropdown.options[
+                    databaseCategoryFilterDropdown.value].text
+                : null;
+
+            string categoryFilter = selectedCategory == "Kaikki Kategoriat"
+                ? null
+                : selectedCategory;
+
+            products = ProductDatabase.SearchProducts(
+                databaseSearchInput == null ? string.Empty : databaseSearchInput.text,
+                categoryFilter);
         }
         catch (System.Exception exception)
         {
@@ -973,12 +1062,21 @@ public class MenuManager : MonoBehaviour
     private void ShowActiveKitchenOrders()
     {
         showingArchivedKitchenOrders = false;
+        showingKitchenSalesSummary = false;
         RefreshKitchenOrders();
     }
 
     private void ShowArchivedKitchenOrders()
     {
         showingArchivedKitchenOrders = true;
+        showingKitchenSalesSummary = false;
+        RefreshKitchenOrders();
+    }
+
+    private void ShowKitchenSalesSummary()
+    {
+        showingArchivedKitchenOrders = true;
+        showingKitchenSalesSummary = true;
         RefreshKitchenOrders();
     }
 
@@ -989,6 +1087,12 @@ public class MenuManager : MonoBehaviour
             kitchenEmptyStateText == null ||
             kitchenOrderRowTemplate == null)
         {
+            return;
+        }
+
+        if (showingKitchenSalesSummary)
+        {
+            RefreshKitchenSalesSummary();
             return;
         }
 
@@ -1023,6 +1127,184 @@ public class MenuManager : MonoBehaviour
         if (kitchenOrdersScrollView != null)
         {
             kitchenOrdersScrollView.verticalNormalizedPosition = 1f;
+        }
+    }
+
+    private void RefreshKitchenSalesSummary()
+    {
+        ClearKitchenOrderRows();
+        kitchenEmptyStateText.gameObject.SetActive(false);
+
+        string archiveDirectory = Path.Combine(
+            Application.persistentDataPath,
+            archivedOrdersDirectoryName);
+        string[] orderPaths;
+
+        try
+        {
+            orderPaths = Directory.Exists(archiveDirectory)
+                ? Directory.GetFiles(archiveDirectory, "order_*.json")
+                : new string[0];
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogError("Arkistoitujen tilausten luetteloa ei voitu lukea: " + exception.Message);
+            kitchenEmptyStateText.text = "Arkistoituja tilauksia ei voitu lukea.";
+            kitchenEmptyStateText.gameObject.SetActive(true);
+            return;
+        }
+
+        int orderCount = 0;
+        float totalSales = 0f;
+        List<ProductSalesSummary> productTotals =
+            new List<ProductSalesSummary>();
+
+        foreach (string orderPath in orderPaths)
+        {
+            OrderData orderData;
+
+            try
+            {
+                orderData = LoadOrderFromJsonAtPath(orderPath);
+            }
+            catch (System.Exception exception)
+            {
+                Debug.LogWarning(
+                    "Arkistoitua tilausta ei voitu lukea: "
+                    + orderPath
+                    + "\n"
+                    + exception.Message);
+                continue;
+            }
+
+            if (orderData == null)
+            {
+                continue;
+            }
+
+            orderCount++;
+            totalSales += orderData.total;
+
+            if (orderData.items == null)
+            {
+                continue;
+            }
+
+            foreach (OrderLineData line in orderData.items)
+            {
+                if (line == null || line.menuItem == null || line.quantity <= 0)
+                {
+                    continue;
+                }
+
+                int productId = line.menuItem.id;
+                ProductSalesSummary summary = productTotals.Find(item =>
+                    item.productId == productId &&
+                    item.productName == line.menuItem.productName &&
+                    item.category == line.menuItem.category);
+
+                if (summary == null)
+                {
+                    summary = new ProductSalesSummary
+                    {
+                        productId = productId,
+                        productName = line.menuItem.productName,
+                        category = line.menuItem.category
+                    };
+                    productTotals.Add(summary);
+                }
+
+                summary.quantity += line.quantity;
+                summary.total += line.lineTotal;
+            }
+        }
+
+        CreateKitchenSalesSummaryRow(
+            "KitchenSalesSummaryTotals",
+            "<b>ARKISTOMYYNTI</b>\n"
+            + "Arkistoituja tilauksia: " + orderCount
+            + "\nMyynti yhteensä: " + totalSales.ToString("0.00") + " €",
+            100f);
+
+        List<ProductSalesSummary> sortedProducts =
+            new List<ProductSalesSummary>(productTotals);
+        sortedProducts.Sort((first, second) =>
+        {
+            int totalComparison = second.total.CompareTo(first.total);
+
+            return totalComparison != 0
+                ? totalComparison
+                : string.Compare(
+                    first.productName,
+                    second.productName,
+                    System.StringComparison.CurrentCultureIgnoreCase);
+        });
+
+        for (int index = 0; index < sortedProducts.Count; index++)
+        {
+            ProductSalesSummary summary = sortedProducts[index];
+            CreateKitchenSalesSummaryRow(
+                "KitchenSalesProduct_" + summary.productId + "_" + index,
+                summary.productName
+                + " | " + summary.category
+                + "\nMyyty: " + summary.quantity
+                + " kpl | Yhteensä: " + summary.total.ToString("0.00") + " €",
+                76f);
+        }
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(kitchenOrdersContent as RectTransform);
+
+        if (kitchenOrdersScrollView != null)
+        {
+            kitchenOrdersScrollView.verticalNormalizedPosition = 1f;
+        }
+    }
+
+    private void CreateKitchenSalesSummaryRow(
+        string rowName,
+        string rowText,
+        float preferredHeight)
+    {
+        GameObject row = Instantiate(kitchenOrderRowTemplate, kitchenOrdersContent);
+        row.name = rowName;
+        row.SetActive(true);
+
+        LayoutElement layoutElement = row.GetComponent<LayoutElement>();
+
+        if (layoutElement != null)
+        {
+            layoutElement.preferredHeight = preferredHeight;
+        }
+
+        TMP_Text orderText = row.transform
+            .Find("KitchenTestOrderText")
+            ?.GetComponent<TMP_Text>();
+
+        if (orderText == null)
+        {
+            orderText = row.GetComponentInChildren<TMP_Text>(true);
+        }
+
+        if (orderText != null)
+        {
+            orderText.text = rowText;
+            orderText.color = archivedOrderTextColor;
+        }
+
+        SetKitchenOrderRowBackgroundColor(row, true);
+
+        Button actionButton = row.transform
+            .Find("KitchenTestArchiveButton")
+            ?.GetComponent<Button>();
+
+        if (actionButton == null)
+        {
+            actionButton = row.GetComponentInChildren<Button>(true);
+        }
+
+        if (actionButton != null)
+        {
+            actionButton.gameObject.SetActive(false);
         }
     }
 
@@ -1213,58 +1495,74 @@ public class MenuManager : MonoBehaviour
     }
 
     private void CreateApplicationNavigation()
-    {
-        Transform applicationNavigation = FindSceneObject("ApplicationNavigation");
-        Transform menuCategoryButtons = FindSceneObject("MenuCategoryButtons");
-        Transform rightPanel = FindSceneObject("RightPanel");
+{
+    Transform applicationNavigation = FindSceneObject("ApplicationNavigation");
+    Transform menuCategoryButtons = FindSceneObject("MenuCategoryButtons");
+    Transform rightPanel = FindSceneObject("RightPanel");
 
-        if (applicationNavigation == null ||
-            menuCategoryButtons == null ||
-            rightPanel == null)
+    menuSearchPanel = FindSceneObject("MenuSearchPanel")?.gameObject;
+        menuSearchInput =
+            FindSceneObject("MenuSearchInput")?.GetComponent<TMP_InputField>();
+
+    if (applicationNavigation == null ||
+        menuCategoryButtons == null ||
+        rightPanel == null)
+    {
+        Debug.LogError("Päänavigaation käyttöliittymäobjekteja ei löytynyt scenestä.");
+        return;
+    }
+
+    menuCategoryButtonsCanvasGroup =
+        GetOrAddCanvasGroup(menuCategoryButtons.gameObject);
+    menuScrollViewCanvasGroup =
+        GetOrAddCanvasGroup(menuScrollView.gameObject);
+    rightPanelCanvasGroup =
+        GetOrAddCanvasGroup(rightPanel.gameObject);
+
+        if (menuSearchInput != null)
         {
-            Debug.LogError("Päänavigaation käyttöliittymäobjekteja ei löytynyt scenestä.");
-            return;
+            menuSearchInput.onValueChanged.RemoveAllListeners();
+            menuSearchInput.onValueChanged.AddListener(_ =>
+            {
+                RefreshMenuSearchResults();
+            });
         }
 
-        menuCategoryButtonsCanvasGroup = GetOrAddCanvasGroup(menuCategoryButtons.gameObject);
-        menuScrollViewCanvasGroup = GetOrAddCanvasGroup(menuScrollView.gameObject);
-        rightPanelCanvasGroup = GetOrAddCanvasGroup(rightPanel.gameObject);
+    ConfigureApplicationNavigationButton(
+        applicationNavigation,
+        "ApplicationNavigation_MenuButton",
+        "RUOKALISTA",
+        true,
+        AppPage.Menu);
 
-        ConfigureApplicationNavigationButton(
-            applicationNavigation,
-            "ApplicationNavigation_MenuButton",
-            "RUOKALISTA",
-            true,
-            AppPage.Menu);
+    ConfigureApplicationNavigationButton(
+        applicationNavigation,
+        "ApplicationNavigation_JsonButton",
+        "JSON",
+        false,
+        AppPage.Json);
 
-        ConfigureApplicationNavigationButton(
-            applicationNavigation,
-            "ApplicationNavigation_JsonButton",
-            "JSON",
-            false,
-            AppPage.Json);
+    ConfigureApplicationNavigationButton(
+        applicationNavigation,
+        "ApplicationNavigation_DatabaseButton",
+        "TIETOKANTA",
+        false,
+        AppPage.Database);
 
-        ConfigureApplicationNavigationButton(
-            applicationNavigation,
-            "ApplicationNavigation_DatabaseButton",
-            "TIETOKANTA",
-            false,
-            AppPage.Database);
+    ConfigureApplicationNavigationButton(
+        applicationNavigation,
+        "ApplicationNavigation_HelpButton",
+        "OHJE",
+        false,
+        AppPage.Menu);
 
-        ConfigureApplicationNavigationButton(
-            applicationNavigation,
-            "ApplicationNavigation_HelpButton",
-            "OHJE",
-            false,
-            AppPage.Menu);
-
-        ConfigureApplicationNavigationButton(
-            applicationNavigation,
-            "ApplicationNavigation_OrdersButton",
-            "TILAUKSET",
-            false,
-            AppPage.Kitchen);
-    }
+    ConfigureApplicationNavigationButton(
+        applicationNavigation,
+        "ApplicationNavigation_OrdersButton",
+        "TILAUKSET",
+        false,
+        AppPage.Kitchen);
+}
 
     private void ConfigureApplicationNavigationButton(
         Transform parent,
@@ -1342,6 +1640,11 @@ public class MenuManager : MonoBehaviour
         if (showKitchenPage)
         {
             ShowActiveKitchenOrders();
+        }
+
+        if (menuSearchPanel != null)
+        {
+            menuSearchPanel.SetActive(showsMenu);
         }
     }
 

@@ -93,6 +93,54 @@ public static class ProductDatabase
         }
     }
 
+    public static List<DatabaseProduct> SearchProducts(
+        string searchText,
+        string category)
+    {
+        List<DatabaseProduct> products;
+
+        if (string.IsNullOrWhiteSpace(category) ||
+            category == "Kaikki Kategoriat")
+        {
+            products = GetAllProducts();
+        }
+        else
+        {
+            if (!TryGetCategoryIdRange(
+                    category,
+                    out int rangeStart,
+                    out int rangeEnd))
+            {
+                return new List<DatabaseProduct>();
+            }
+
+            using (SQLiteConnection connection =
+                   new SQLiteConnection(GetDatabasePath()))
+            {
+                products = connection.Query<DatabaseProduct>(
+                    "SELECT * FROM Products " +
+                    "WHERE id BETWEEN ? AND ? " +
+                    "ORDER BY id;",
+                    rangeStart,
+                    rangeEnd);
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(searchText))
+        {
+            return products;
+        }
+
+        string normalizedSearchText = searchText.Trim();
+        products.RemoveAll(product =>
+            string.IsNullOrEmpty(product.productName) ||
+            product.productName.IndexOf(
+                normalizedSearchText,
+                StringComparison.CurrentCultureIgnoreCase) < 0);
+
+        return products;
+    }
+
     public static int GetNextProductId(string category)
 {
     if (!TryGetCategoryIdRange(
@@ -113,11 +161,81 @@ public static class ProductDatabase
             rangeStart,
             rangeEnd);
 
+        highestId = Math.Max(
+            highestId,
+            GetHighestProductIdFromOrderSnapshots(rangeStart, rangeEnd));
+
         int nextId = highestId + 1;
 
         return nextId <= rangeEnd ? nextId : 0;
     }
 }
+
+    private static int GetHighestProductIdFromOrderSnapshots(
+        int rangeStart,
+        int rangeEnd)
+    {
+        int highestId = rangeStart - 1;
+        string persistentDataPath = Application.persistentDataPath;
+
+        if (!Directory.Exists(persistentDataPath))
+        {
+            return highestId;
+        }
+
+        string[] orderPaths;
+
+        try
+        {
+            orderPaths = Directory.GetFiles(
+                persistentDataPath,
+                "order_*.json",
+                SearchOption.AllDirectories);
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning(
+                "Tilaus-ID:itä ei voitu tarkistaa uusia tuotteita varten: "
+                + exception.Message);
+            return highestId;
+        }
+
+        foreach (string orderPath in orderPaths)
+        {
+            try
+            {
+                OrderData orderData = JsonUtility.FromJson<OrderData>(
+                    File.ReadAllText(orderPath));
+
+                if (orderData?.items == null)
+                {
+                    continue;
+                }
+
+                foreach (OrderLineData line in orderData.items)
+                {
+                    int productId = line?.menuItem?.id ?? 0;
+
+                    if (productId >= rangeStart &&
+                        productId <= rangeEnd &&
+                        productId > highestId)
+                    {
+                        highestId = productId;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning(
+                    "Tilaus-ID:tä ei voitu lukea tiedostosta "
+                    + orderPath
+                    + ": "
+                    + exception.Message);
+            }
+        }
+
+        return highestId;
+    }
 
     public static bool InsertProduct(DatabaseProduct product)
     {
