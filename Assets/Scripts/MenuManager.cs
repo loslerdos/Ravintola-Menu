@@ -30,6 +30,7 @@ public class MenuManager : MonoBehaviour
     [SerializeField] private Button kitchenRefreshButton;
     [SerializeField] private Button kitchenSalesSummaryButton;
     [SerializeField] private GameObject kitchenOrderRowTemplate;
+    [SerializeField] private GameObject helpPage;
 
     [Header("Tietokanta")]
     [SerializeField] private GameObject databasePage;
@@ -90,7 +91,8 @@ public class MenuManager : MonoBehaviour
         Menu,
         Json,
         Kitchen,
-        Database
+        Database,
+        Help
     }
 
     private sealed class ProductSalesSummary
@@ -1554,7 +1556,7 @@ public class MenuManager : MonoBehaviour
         "ApplicationNavigation_HelpButton",
         "OHJE",
         false,
-        AppPage.Menu);
+        AppPage.Help);
 
     ConfigureApplicationNavigationButton(
         applicationNavigation,
@@ -1616,6 +1618,7 @@ public class MenuManager : MonoBehaviour
         bool showJsonPage = targetPage == AppPage.Json;
         bool showKitchenPage = targetPage == AppPage.Kitchen;
         bool showDatabasePage = targetPage == AppPage.Database;
+        bool showHelpPage = targetPage == AppPage.Help;
 
         if (jsonPage != null)
         {
@@ -1630,6 +1633,11 @@ public class MenuManager : MonoBehaviour
         if (databasePage != null)
         {
             databasePage.SetActive(showDatabasePage);
+        }
+
+        if (helpPage != null)
+        {
+            helpPage.SetActive(showHelpPage);
         }
 
         if (showDatabasePage)

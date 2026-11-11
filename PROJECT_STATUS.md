@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-10-22
+Paivitetty: 2026-11-11
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: myyntiyhteenvedon ID-törmäyskorjaus on käyttäjän Play-tilassa kokeilema: Makkaraperunat näkyy arkistomyynnissä, ja arkistoidun tilauksen poistaminen poistaa sen myynnistä odotetusti. Koko työkulun käyttöohje on kesken.
+- Nykyinen pääpaino: myyntiyhteenveto toimii käyttäjän Play-testin mukaan. Ohje-välilehti näkyy Play-tilassa, sen tekstiä voi muokata HelpGuideText-objektin TMP-komponentista Inspectorissa, ja Products-tuotteen poisto ei vaikuta arkistomyyntiin.
 
 ## Tehty
 
@@ -115,6 +115,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - `KitchenSalesSummaryButton` on lisätty Tilaukset-näkymään ja kytketty `MenuManager`iin. Yhteenveto käyttää keittiön nykyistä vieritettävää tilauslistaa.
 - `ProductDatabase.GetNextProductId()` huomioi myös aktiivisten ja arkistoitujen tilausten snapshotit, jotta poistetun tuotteen ID:tä ei käytetä uudelleen.
 - Käyttäjä vahvisti Play-tilassa, että Makkaraperunat näkyy myyntiyhteenvedossa ja arkistoidun tilauksen poistaminen poistaa sen yhteenvedosta odotetusti.
+- `HelpPage` on lisätty Canvasin alle. Ohje-painike avaa uuden sivun, jossa pikaopas neuvoo ruokalistan ja ostoskorin, tilausten arkistoinnin, myyntiyhteenvedon, tuotteiden hallinnan ja JSON-näkymän käytön.
 
 ## Tehtävänannon vaatimukset
 
@@ -129,18 +130,15 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 
 ## Seuraavaksi
 
-1. Varmista Play-tilassa, että myyntiyhteenveto säilyy ennallaan, kun arkistossa olevan tuotteen tuote poistetaan Products-taulusta.
-2. Varmista, ettei uuden tuotteen ID:tä valita aiemmissa tilaus-snapshotissa käytetyistä ID:istä.
-3. Laadi koko työkulun käyttöohje asiakkaan menusta ja ostoskorista tilausten JSON-tallennukseen, keittiön aktiivisiin ja arkistoituihin tilauksiin, tuotteiden CRUD-toimintoihin ja hakuihin sekä myyntiyhteenvetoon. Päätä ohjeen sijoitus ja toteutusmuoto ennen sen toteuttamista.
+1. Viimeistele tarvittaessa Ohje-sivun teksti `HelpGuideText`-objektin TextMeshProUGUI-komponentista Inspectorissa.
 
 ## Keskeneräiset asiat ja ongelmat
 
 - Kategoriapainikkeiden kuvakkeet ovat suunnitteilla, mutta niitä ei ole toteutettu.
 - Oikean reunan InfoContent tarvitsee myöhemmin lopulliset annoskuvat.
 - JSON-näkymän lopullinen layout ja vieritys voidaan vielä viimeistellä eripituisilla tilauksilla.
-- Koko työkulun käyttöohje puuttuu. Ohje kattaa asiakkaan menun ja ostoskorin, tilausten tallennuksen, keittiön tilaukset ja arkiston, tuotteiden hallinnan ja haun sekä myyntiyhteenvedon. Ohjeen sijoitus ja toteutusmuoto ovat vielä avoinna; Ohje-välilehti on placeholder.
+- Ohje-sivu näkyy Play-tilassa; sen sisältöä voi vielä korjata Inspectorissa.
 - Kategoriapainikkeiden ja tietokannan kategorianimien täytyy pysyä yhdenmukaisina uusien CRUD-tuotteiden kanssa.
-- Products-taulusta poistetun tuotteen arkistosnapshotin säilyminen myyntiyhteenvedossa odottaa vielä erillistä Play-testiä.
 
 ## Työskentelyohje seuraavalle kerralle
 
@@ -161,7 +159,10 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Nimihaku ja kategoriarajaus kytkettiin molempiin näkymiin; `dotnet build Assembly-CSharp.csproj --no-restore` onnistui, ja käyttäjä vahvisti toiminnan Play-tilassa.
 - Vaiheeseen 3.10 lisättiin arkistoitujen tilausten myyntiyhteenveto ja koko työkulun käyttöohje. Ohje kattaa asiakkaan ja henkilökunnan työnkulut; toteutusmuoto jätettiin avoimeksi.
 - Myyntiyhteenvedon ID-törmäys korjattiin: paikallisessa arkistossa ID 204 kuuluu sekä `TestiRuoka`- että `Makkaraperunat`-snapshotille, ja raportti käsittelee ne nyt eri tuotteina. ID-generaattori tarkistaa tilaus-snapshotit.
+- ID-generaattori on testattu Unityn Play-tilassa: uusi tuote sai ID:n 207, eikä tilaussnapshotissa käytettyä ID:tä kierrätetty.
 - Käyttäjän Play-testin mukaan Makkaraperunat näkyy myyntiyhteenvedossa, ja koko arkistotilauksen poistaminen poistaa myynnin yhteenvedosta odotetusti.
-- `dotnet build Assembly-CSharp.csproj --no-restore` onnistui: 0 virhettä ja 7 editor/framework-varoitusta. Products-taulusta poistamisen vaikutusta arkistoituun myyntiin ei ole vielä Play-testattu.
-- Seuraava aloitus: testaa Products-tuotteen poiston vaikutus säilytettyyn arkistotilauksen snapshotiin; tämän jälkeen aloita koko työkulun käyttöohje.
+- Käyttäjä vahvisti, että Ohje näkyy Play-tilassa ja Products-tuotteen poistaminen ei vaikuta arkistomyyntiin.
+- Ohje-välilehdelle lisättiin staattinen `HelpPage` ja uusi `AppPage.Help`-reititys. Ohje sisältää pikaohjeet tilauksen tekemiseen, keittiöön, myyntiin, tuotteiden CRUD-toimintoihin ja JSON-näkymään.
+- `dotnet build Assembly-CSharp.csproj --no-restore` onnistui: 0 virhettä ja 7 editor/framework-varoitusta. HelpPage-skenen fileID:t ovat yksilöllisiä.
+- Seuraava aloitus: viimeistele Ohje-sivun sanamuoto tarvittaessa Inspectorissa.
 - Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.
