@@ -1,6 +1,6 @@
 # Ravintola Menu - projektin tila
 
-Paivitetty: 2026-11-11
+Paivitetty: 2026-11-16
 
 ## Projektin tavoite
 
@@ -13,7 +13,7 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - Input System: Unityn uusi Input System
 - Scene: `Assets/Scenes/Menu.unity`
 - GitHub-repository: `https://github.com/loslerdos/Ravintola-Menu`
-- Nykyinen pääpaino: myyntiyhteenveto toimii käyttäjän Play-testin mukaan. Ohje-välilehti näkyy Play-tilassa, sen tekstiä voi muokata HelpGuideText-objektin TMP-komponentista Inspectorissa, ja Products-tuotteen poisto ei vaikuta arkistomyyntiin.
+- Nykyinen pääpaino: vaiheet 3.4-3.10, haku, Products CRUD ja WebGL-julkaisu toimivat. Julkaistu verkkoversio on `https://loslerdos.github.io/RavintolaMenuWeb/`.
 
 ## Tehty
 
@@ -166,3 +166,14 @@ Rakennetaan Osteria del Sol -ravintolan menu Unityssa. Menun tulee esittaa tuott
 - `dotnet build Assembly-CSharp.csproj --no-restore` onnistui: 0 virhettä ja 7 editor/framework-varoitusta. HelpPage-skenen fileID:t ovat yksilöllisiä.
 - Seuraava aloitus: viimeistele Ohje-sivun sanamuoto tarvittaessa Inspectorissa.
 - Viimeisin Git-paluupiste: `3.8 tietokanta näyttää Products-taulun tuotteet`.
+
+## Tilanne 2026-11-16
+
+- Tuotenimihaku on kirjainkoosta riippumaton. Haku vastaa esimerkiksi `pizza`- ja `Pizza`-hakua samalla tavalla, mutta ei muuta eri sanoja toisikseen, kuten `pizza` ja `Pizze`.
+- Products-tuotteen muokkaus hyväksyy olemassa olevan tuotteen kategorian korjauksen, vaikka tuotteen historiallinen ID ei osuisi uuden kategorian ID-alueelle. Uusien tuotteiden lisäyksessä kategoriakohtainen ID-alue säilyy.
+- Asiakasmenun ja tietokantahakujen kategoriarajaus perustuu Products-taulun `category`-kenttään eikä tuotteen ID-alueeseen. Tuote siirtyy siten oikeaan menu-kategoriaan muokkauksen jälkeen. Kategorioiden yksikkö- ja monikkomuodot ovat tuettuja.
+- CartUI:n WebGL-asemointi käyttää `RectTransform.anchoredPosition`-koordinaatteja maailmanposition sijasta, jotta ostoskori avautuu Footer-painikkeen kohdalta myös selainversiossa. Selainjulkaisun lopullinen toimintatesti tehdään seuraavan toiminnallisen WebGL-päivityksen yhteydessä.
+- WebGL-build tehdään pakkaamattomana: Player Settings > WebGL > Publishing Settings > Compression Format = `Disabled`. GitHub Pages toimii silloin ilman pakkausotsikoita.
+- Julkaisuarkkitehtuuri käyttää kahta repositoryä mutta vain yhtä julkaistua sivua: `Ravintola-Menu` sisältää Unityn lähdekoodin eikä käytä GitHub Pagesia; `RavintolaMenuWeb` sisältää WebGL-buildin ja julkaisee osoitteen `https://loslerdos.github.io/RavintolaMenuWeb/`.
+- Julkaisurutiini: buildaa tähän projektiin `docs`-kansioon, kopioi `docs`-kansion sisältö (ei itse kansiota) `RavintolaMenuWeb`-repositoryn juureen, tee siellä commit ja push. Julkaisurepositoryn `.git`-kansiota ei poisteta.
+- Nykyinen julkaistava build on 17 tiedostoa ja noin 48.69 MB. Unity-projektin `Library`-kansiota ei julkaista.
