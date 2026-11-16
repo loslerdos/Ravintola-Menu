@@ -82,14 +82,23 @@ public static class ProductDatabase
 
     public static List<DatabaseProduct> GetProductsByCategory(string category)
     {
+        if (!TryGetCategoryNames(
+                category,
+                out string singularCategory,
+                out string pluralCategory))
+        {
+            return new List<DatabaseProduct>();
+        }
+
         using (SQLiteConnection connection =
                new SQLiteConnection(GetDatabasePath()))
         {
             return connection.Query<DatabaseProduct>(
                 "SELECT * FROM Products " +
-                "WHERE category = ? " +
+                "WHERE category = ? OR category = ? " +
                 "ORDER BY id;",
-                category);
+                singularCategory,
+                pluralCategory);
         }
     }
 
@@ -106,10 +115,10 @@ public static class ProductDatabase
         }
         else
         {
-            if (!TryGetCategoryIdRange(
+            if (!TryGetCategoryNames(
                     category,
-                    out int rangeStart,
-                    out int rangeEnd))
+                    out string singularCategory,
+                    out string pluralCategory))
             {
                 return new List<DatabaseProduct>();
             }
@@ -119,10 +128,10 @@ public static class ProductDatabase
             {
                 products = connection.Query<DatabaseProduct>(
                     "SELECT * FROM Products " +
-                    "WHERE id BETWEEN ? AND ? " +
+                    "WHERE category = ? OR category = ? " +
                     "ORDER BY id;",
-                    rangeStart,
-                    rangeEnd);
+                    singularCategory,
+                    pluralCategory);
             }
         }
 
@@ -136,7 +145,7 @@ public static class ProductDatabase
             string.IsNullOrEmpty(product.productName) ||
             product.productName.IndexOf(
                 normalizedSearchText,
-                StringComparison.CurrentCultureIgnoreCase) < 0);
+            StringComparison.OrdinalIgnoreCase) < 0);
 
         return products;
     }
@@ -276,8 +285,7 @@ public static class ProductDatabase
 
     public static bool UpdateProduct(DatabaseProduct product)
     {
-        if (!IsProductValid(product) ||
-            !IsIdInCategoryRange(product.id, product.category))
+        if (!IsProductValid(product))
         {
             return false;
         }
@@ -285,6 +293,14 @@ public static class ProductDatabase
         using (SQLiteConnection connection =
                new SQLiteConnection(GetDatabasePath()))
         {
+            DatabaseProduct existingProduct =
+                connection.Find<DatabaseProduct>(product.id);
+
+            if (existingProduct == null)
+            {
+                return false;
+            }
+
             return connection.Update(product) > 0;
         }
     }
@@ -315,6 +331,40 @@ public static class ProductDatabase
             out int rangeEnd) &&
             id >= rangeStart &&
             id <= rangeEnd;
+    }
+
+    private static bool TryGetCategoryNames(
+        string category,
+        out string singularCategory,
+        out string pluralCategory)
+    {
+        switch (category)
+        {
+            case "Alkuruoka":
+            case "Alkuruoat":
+                singularCategory = "Alkuruoka";
+                pluralCategory = "Alkuruoat";
+                return true;
+            case "Pääruoka":
+            case "Pääruoat":
+                singularCategory = "Pääruoka";
+                pluralCategory = "Pääruoat";
+                return true;
+            case "Jälkiruoka":
+            case "Jälkiruoat":
+                singularCategory = "Jälkiruoka";
+                pluralCategory = "Jälkiruoat";
+                return true;
+            case "Juoma":
+            case "Juomat":
+                singularCategory = "Juoma";
+                pluralCategory = "Juomat";
+                return true;
+            default:
+                singularCategory = null;
+                pluralCategory = null;
+                return false;
+        }
     }
 
     private static bool TryGetCategoryIdRange(

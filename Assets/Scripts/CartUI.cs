@@ -26,8 +26,8 @@ public class CartUI : MonoBehaviour
     private RectTransform cartTransform;
     private Coroutine cartAnimation;
     private bool isCartOpen;
-    private Vector3 visiblePosition;
-    private Vector3 hiddenPosition;
+    private Vector2 visibleAnchoredPosition;
+    private Vector2 hiddenAnchoredPosition;
     private readonly List<CartItemRow> cartRows = new List<CartItemRow>();
 
     private CanvasGroup confirmOrderCanvasGroup;
@@ -44,10 +44,8 @@ public class CartUI : MonoBehaviour
     private void Awake()
     {
         cartTransform = transform as RectTransform;
-        visiblePosition = cartTransform.position;
-        hiddenPosition = toggleButtonTransform == null
-            ? visiblePosition
-            : toggleButtonTransform.position;
+        visibleAnchoredPosition = cartTransform.anchoredPosition;
+        UpdateHiddenCartPosition();
         SetCartOpen(false, false);
     }
 
@@ -209,9 +207,7 @@ public class CartUI : MonoBehaviour
 
         if (animate)
         {
-            hiddenPosition = toggleButtonTransform == null
-                ? visiblePosition
-                : toggleButtonTransform.position;
+            UpdateHiddenCartPosition();
             cartAnimation = StartCoroutine(AnimateCart(shouldOpen));
             return;
         }
@@ -276,12 +272,44 @@ public class CartUI : MonoBehaviour
     {
         cartCanvasGroup.alpha = visibility;
         infoContentCanvasGroup.alpha = 1f - visibility;
-        cartTransform.position = Vector3.Lerp(hiddenPosition, visiblePosition, visibility);
+        cartTransform.anchoredPosition = Vector2.Lerp(
+            hiddenAnchoredPosition,
+            visibleAnchoredPosition,
+            visibility);
         cartTransform.localScale = Vector3.one * Mathf.Lerp(hiddenScale, 1f, visibility);
         cartTransform.localRotation = Quaternion.Euler(
             Mathf.Lerp(hiddenPitch, 0f, visibility),
             Mathf.Lerp(hiddenYaw, 0f, visibility),
             Mathf.Lerp(hiddenRoll, 0f, visibility));
+    }
+
+    private void UpdateHiddenCartPosition()
+    {
+        if (toggleButtonTransform == null ||
+            cartTransform.parent is not RectTransform parentTransform)
+        {
+            hiddenAnchoredPosition = visibleAnchoredPosition;
+            return;
+        }
+
+        Canvas canvas = GetComponentInParent<Canvas>();
+        Camera camera = canvas != null &&
+                        canvas.renderMode != RenderMode.ScreenSpaceOverlay
+            ? canvas.worldCamera
+            : null;
+
+        Vector2 screenPosition = RectTransformUtility.WorldToScreenPoint(
+            camera,
+            toggleButtonTransform.position);
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                parentTransform,
+                screenPosition,
+                camera,
+                out hiddenAnchoredPosition))
+        {
+            hiddenAnchoredPosition = visibleAnchoredPosition;
+        }
     }
 
     private void ClearCartRows()

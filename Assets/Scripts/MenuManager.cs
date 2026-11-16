@@ -804,13 +804,35 @@ public class MenuManager : MonoBehaviour
         databaseProductNameInput.text = product.productName;
         databaseProductDescriptionInput.text = product.description;
         databaseProductSpecialNoteInput.text = product.specialNote;
-        databaseProductCategoryDropdown.value =
+        string editorCategory = GetProductEditorCategory(product.category);
+        int categoryIndex =
             databaseProductCategoryDropdown.options.FindIndex(
-                option => option.text == product.category);
+                option => option.text == editorCategory);
+
+        databaseProductCategoryDropdown.value =
+            categoryIndex >= 0 ? categoryIndex : 0;
+
         databaseProductPriceInput.text = product.price.ToString(
             "0.00",
             System.Globalization.CultureInfo.InvariantCulture);
         SetDatabaseProductEditorStatus(string.Empty);
+    }
+
+    private static string GetProductEditorCategory(string category)
+    {
+        switch (category)
+        {
+            case "Alkuruoat":
+                return "Alkuruoka";
+            case "Pääruoat":
+                return "Pääruoka";
+            case "Jälkiruoat":
+                return "Jälkiruoka";
+            case "Juomat":
+                return "Juoma";
+            default:
+                return category;
+        }
     }
 
     private void SaveDatabaseProductFromEditor()
